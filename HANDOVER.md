@@ -50,16 +50,43 @@ by committing.
    another ~2 min to actually start redirecting.
 4. Change `site` in `astro.config.mjs`, and the displayed text in
    `src/pages/og-card.astro` — see below.
-5. Re-capture `public/og.png` from `/og-card`.
+5. Re-capture `public/og.png` from `/og-card` — **headlessly**, per the next section.
+
+## Re-capturing the social card
+
+```bash
+bun run build && bun run preview &
+chrome --headless=new --disable-gpu --hide-scrollbars \
+  --force-device-scale-factor=1 --window-size=1200,630 \
+  --virtual-time-budget=20000 --user-data-dir="$(mktemp -d)" \
+  --screenshot=public/og.png http://localhost:4321/og-card
+```
+
+On Windows, `chrome` is `/c/Program\ Files/Google/Chrome/Application/chrome.exe`.
+The `--user-data-dir` is what lets this run while a normal Chrome is open, and
+`--virtual-time-budget` is what lets the three web fonts resolve before the shot.
+Match `--window-size` to `src/og.ts`. Verify before committing:
+
+```bash
+python -c "import struct;print(struct.unpack('>II',open('public/og.png','rb').read()[16:24]))"
+```
 
 ## Traps
+
+- **Do not capture the card with a browser's viewport screenshot.** It is
+  downscaled to the capture pipeline's own width and returned as **JPEG** — so it
+  misses 1200×630 *and* resamples flat colour and a pixel-art sprite. The
+  1210×635 file that shipped until `b0eab43` came from exactly that, and put a
+  strip of bare page background down two edges of every social preview. Headless
+  Chrome writes a lossless PNG at the exact requested size in one shot.
 
 - **The domain is duplicated in `src/pages/og-card.astro`.** That card renders
   the domain as *displayed text*, so it cannot derive from `site`. It is the one
   place a domain change will not propagate automatically — and the failure is
   silent, because the card only appears in social previews. `public/og.png` is a
   committed screenshot of that page, so changing the markup is not enough: the
-  PNG has to be re-captured at the size `src/og.ts` declares.
+  PNG has to be re-captured at the size `src/og.ts` declares. Markup and PNG move
+  together, always.
 
 - **`url()` in `src/paths.ts` is currently an identity function.** With `base`
   unset, `BASE_URL` is `/`, so it returns its argument unchanged. It is kept, not
