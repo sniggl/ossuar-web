@@ -8,12 +8,12 @@
  * does not exist yet; a section that vanishes reads as broken.
  */
 import SubscribeForm from './SubscribeForm.astro';
-import { channels, newsletter } from '../links';
+import { channels, newsletter, feed } from '../links';
 import { url } from '../paths';
 
-/* The feed is an internal URL, so it is not in `links.ts` — that file is
-   off-site only — but it is a channel and belongs in this list. */
-const feed = { href: url('/rss.xml'), handle: 'RSS', note: 'the raw feed, no middleman' };
+/* The feed's href is an internal path, so it takes `url()` like every other
+   internal link. The channel itself is declared in links.ts beside the rest. */
+const all = [...channels, { ...feed, href: url(feed.href) }];
 ---
 
 <section class="band" id="follow">
@@ -30,7 +30,7 @@ const feed = { href: url('/rss.xml'), handle: 'RSS', note: 'the raw feed, no mid
 
     <ul class="channels">
       {
-        [...channels, feed].map((c) => (
+        all.map((c) => (
           <li>
             <a href={c.href}>{c.handle}</a>
             <span>{c.note}</span>
@@ -95,25 +95,11 @@ const feed = { href: url('/rss.xml'), handle: 'RSS', note: 'the raw feed, no mid
     padding-bottom: 0;
   }
 
-  /* `position` here, the 44px box itself in global.css beside the masthead's —
-     these four links are the only conversion on the page and they were the
-     smallest targets on it. */
+  /* The link's own look — and its 44px box — are in global.css, because the
+     journal entry foot prints the same channel from the same list. All that is
+     left here is where the grid puts it. */
   .channels a {
-    position: relative;
     justify-self: start;
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--bone);
-    text-decoration: none;
-    border-bottom: 1px solid var(--glass-amber);
-    padding-bottom: 0.25rem;
-  }
-
-  .channels a:hover,
-  .channels a:focus-visible {
-    color: var(--glass-amber-lit);
   }
 
   .channels span {

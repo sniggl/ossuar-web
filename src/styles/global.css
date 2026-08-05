@@ -10,7 +10,6 @@
   --font-body: 'Grenze', Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --measure: 62ch;
   --gutter: clamp(1.25rem, 4vw, 3.5rem);
 }
 
@@ -106,10 +105,14 @@ h3 {
 /* Hit areas reach 44px without moving a single glyph or rule. Blackletter caps
    are short, so the drawn box is nowhere near a thumb's worth of target — and
    the follow band's channel links are shorter still at 27px tall. One rule, so
-   the ≥44px promise is true in one place rather than claimed in two. */
+   the ≥44px promise is true in one place rather than claimed in two.
+   `.entry-nav a` is the one link that was left off this list: it measured 44
+   only by accident, inheriting the height of a two-line sibling, and collapsed
+   to 29px on any entry whose onward link is missing or wrapped. */
 .wordmark::after,
 .masthead nav a::after,
-.channels a::after {
+.channels a::after,
+.entry-nav a::after {
   content: '';
   position: absolute;
   /* The horizontal figure is set by "RSS", the shortest label on the site and
@@ -312,6 +315,27 @@ h3 {
 
 .follow .mono-note {
   max-width: 42ch;
+}
+
+/* The channel link, wherever it appears. The follow band on the index and the
+   foot of every journal entry print the same object from the same list, so its
+   look is declared once — beside the hit-area rule that already names it, not
+   in each consumer's scoped block. Only the layout around it differs. */
+.channels a {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bone);
+  text-decoration: none;
+  border-bottom: 1px solid var(--glass-amber);
+  padding-bottom: 0.25rem;
+}
+
+.channels a:hover,
+.channels a:focus-visible {
+  color: var(--glass-amber-lit);
 }
 
 /* ── bands: the journal, and the follow band under it ───── */

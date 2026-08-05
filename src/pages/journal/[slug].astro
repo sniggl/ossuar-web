@@ -3,7 +3,9 @@ import Base from '../../layouts/Base.astro';
 import Crypt from '../../components/Crypt.astro';
 import Masthead from '../../components/Masthead.astro';
 import { entries } from '../../data/journal';
+import { channels, feed } from '../../links';
 import { url } from '../../paths';
+import { dayOf } from '../../project';
 
 export function getStaticPaths() {
   return entries.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
@@ -23,6 +25,17 @@ const shown = new Date(entry.date).toLocaleDateString('en-GB', {
 });
 /* the first image is the one a reader waits on, so it is the one that loads eagerly */
 const lead = entry.body.findIndex((b) => b.kind === 'figure');
+
+/**
+ * Most people meet this site one entry at a time, from a feed or a link — they
+ * never see the index, so they never see the follow band or the day counter. So
+ * the foot of an entry carries both: where this post sits in the run, and how
+ * far into the build it landed. Derived, like every other number here — the
+ * position from the array, the day from the entry's own date.
+ */
+const position = entries.length - index;
+const day = String(dayOf(entry.date)).padStart(3, '0');
+const follow = [...channels, { ...feed, href: url(feed.href) }];
 ---
 
 <Base
@@ -96,9 +109,31 @@ const lead = entry.body.findIndex((b) => b.kind === 'figure');
 
       </article>
 
+      {/* The end of a post is the one moment a stranger has decided they like
+          this. Until now it offered them a single link back to an index they
+          have probably never seen. */}
+      <aside class="entry-follow">
+        <h2>Follow the build</h2>
+        <p class="mono-note">Entry {position} of {entries.length} · day {day}</p>
+        <ul class="channels">
+          {follow.map((c) => (
+            <li>
+              <a href={c.href}>{c.handle}</a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+
       <nav class="entry-nav" aria-label="Journal">
-        <a href={url('/#journal')}>← All entries</a>
-        {older && <a href={url(`/journal/${older.slug}/`)} class="next">{older.title} →</a>}
+        <a class="back" href={url('/#journal')}>← All entries</a>
+        {
+          older && (
+            <a class="older" href={url(`/journal/${older.slug}/`)}>
+              <span class="older-slug">Older post</span>
+              <span class="older-title">{older.title}</span>
+            </a>
+          )
+        }
       </nav>
     </div>
   </main>
@@ -152,7 +187,13 @@ const lead = entry.body.findIndex((b) => b.kind === 'figure');
     text-wrap: balance;
   }
 
-  .lede {
+  /* `article p.lede`, not `.lede`. Astro scopes both selectors with the same
+     attribute, which leaves a bare class at (0,2,0) against `article p` at
+     (0,2,2) — so the standfirst was losing both its colour and its measure to
+     the rule below and rendering as paragraph one, 135px wider than designed
+     with no brightness step. It is the hinge between a 48px title and 23px
+     body; without the step there is no hinge. */
+  article p.lede {
     margin: 1.25rem 0 0;
     font-size: 1.16em;
     line-height: 1.55;
@@ -161,9 +202,14 @@ const lead = entry.body.findIndex((b) => b.kind === 'figure');
     text-wrap: pretty;
   }
 
+  /* 50ch, not 62. `ch` is the width of a `0`, and Grenze's is ~24% wider than
+     its average lowercase letter, so 62ch measured 76–88 real characters — and
+     it only bound at all around 768px, because `--gutter` grows with the
+     viewport inside a fixed 46rem column and the measure *narrows* as the screen
+     widens. 50ch lands ~62 characters and binds everywhere above the phone. */
   article p {
     color: var(--bone-body);
-    max-width: 62ch;
+    max-width: 50ch;
   }
 
   /* a screenshot or a gif, leaded like everything else, reclaiming the gutter */
@@ -173,20 +219,36 @@ const lead = entry.body.findIndex((b) => b.kind === 'figure');
     margin-inline: calc(-1 * var(--gutter));
   }
 
+  /* A ceiling, because a devlog posts tall things — a 700×1400 UI panel was
+     rendering at 1.94 viewport heights with no way to see it whole. `width:auto`
+     is what makes the cap keep the aspect ratio, and it also stops a small
+     figure being stretched to the bleed, which for pixel art was never right. */
   .shot img {
     display: block;
-    width: 100%;
+    width: auto;
     height: auto;
+    max-width: 100%;
+    max-height: 80svh;
+    margin-inline: auto;
     border-block: var(--lead-w) solid var(--lead);
     background: var(--lead);
+    /* the came's own light and shadow: --lead on --ink is 1.02:1, so the border
+       alone is a rule nobody can see */
+    box-shadow:
+      0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
+      0 1px 0 rgba(0, 0, 0, 0.6);
   }
 
   .shot img.px {
     image-rendering: pixelated;
   }
 
+  /* A caption had no measure at all and ran the full bleed — ~92 characters
+     while the paragraphs above it were capped. 62ch is exact here: the caption
+     is monospaced, so a `ch` really is one character. */
   .shot figcaption {
     margin: 0.85rem var(--gutter) 0;
+    max-width: 62ch;
     font-family: var(--font-mono);
     font-size: 0.85rem;
     line-height: 1.6;
@@ -211,6 +273,9 @@ const lead = entry.body.findIndex((b) => b.kind === 'figure');
     gap: var(--lead-w);
     background: var(--lead);
     border-block: var(--lead-w) solid var(--lead);
+    box-shadow:
+      0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
+      0 1px 0 rgba(0, 0, 0, 0.6);
   }
 
   .strip-rail span {
@@ -236,9 +301,11 @@ const lead = entry.body.findIndex((b) => b.kind === 'figure');
 
   .strip figcaption {
     margin: 0.85rem var(--gutter) 0;
+    max-width: 62ch;
     font-family: var(--font-mono);
     font-size: 0.85rem;
     line-height: 1.6;
+    letter-spacing: 0.01em;
     color: var(--bone-faint);
   }
 
@@ -263,20 +330,63 @@ const lead = entry.body.findIndex((b) => b.kind === 'figure');
     margin: 0;
   }
 
+  /* Most readers meet this site one entry at a time and never see the index, so
+     the follow band comes to them. Not a second FollowBand — the same list from
+     links.ts, set as a row, with the heading at the same size the index's bands
+     use because for these readers it is the only one. */
+  .entry-follow {
+    margin-top: clamp(2.5rem, 6vw, 3.5rem);
+    padding-top: clamp(1.5rem, 3vw, 2rem);
+    border-top: var(--lead-w) solid var(--lead);
+    box-shadow:
+      0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
+      inset 0 1px 0 rgba(0, 0, 0, 0.6);
+  }
+
+  .entry-follow h2 {
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    letter-spacing: 0.04em;
+  }
+
+  .entry-follow .mono-note {
+    margin: 0.5rem 0 0;
+  }
+
+  .entry-follow .channels {
+    margin: 1.35rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    /* the row gap matches the masthead's for the same reason: the 44px hit boxes
+       reach 0.7rem past each link, and any tighter has two rows of them fighting
+       over the same tap */
+    gap: 1.5rem clamp(1.25rem, 2.5vw, 2.25rem);
+  }
+
   .entry-nav {
     margin-top: 2.5rem;
     padding-top: 1.5rem;
     border-top: var(--lead-w) solid var(--lead);
+    box-shadow:
+      0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
+      inset 0 1px 0 rgba(0, 0, 0, 0.6);
     display: flex;
+    /* `start`, or a link stretches to the height of its tallest sibling: the
+       back link measured 51px of box around 18px of text, so its hover underline
+       and its focus ring both drew a full line-height below the word. */
+    align-items: start;
     justify-content: space-between;
     gap: 1.5rem;
     flex-wrap: wrap;
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    letter-spacing: 0.1em;
   }
 
+  /* `position` here, the 44px box itself in global.css beside the masthead's.
+     This link had neither, and collapsed to 29px whenever it had no two-line
+     sibling to inherit height from — which is every entry on a phone, and the
+     oldest entry everywhere. */
   .entry-nav a {
+    position: relative;
     color: var(--bone-dim);
     text-decoration: none;
     border-bottom: 1px solid transparent;
@@ -290,8 +400,35 @@ const lead = entry.body.findIndex((b) => b.kind === 'figure');
     border-bottom-color: var(--glass-amber);
   }
 
-  .entry-nav .next {
+  .back {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* This was a bare title in tracked mono with a `→` after it — a forward arrow
+     on a link that goes backwards, wrapping to two or three lines at every width
+     because label tracking on a 62-character title measures ~590px. The slug
+     says the direction now, so the arrow is gone, and the title is set in the
+     body face where the same 62 characters fit one line. */
+  .older {
+    display: grid;
+    gap: 0.3rem;
+    justify-items: end;
     text-align: right;
     max-width: 24rem;
+  }
+
+  .older-slug {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bone-faint);
+  }
+
+  .older-title {
+    font-size: 1.05rem;
+    line-height: 1.6;
   }
 </style>

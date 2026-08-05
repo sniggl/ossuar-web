@@ -7,14 +7,14 @@ import LeadedWindow from '../components/LeadedWindow.astro';
 import Masthead from '../components/Masthead.astro';
 import { entries } from '../data/journal';
 import { url } from '../paths';
+import { dayOf } from '../project';
 
 /**
  * Nothing countable on this page is typed by hand. A number a human has to
  * remember to update is a number that is wrong by next week, and this site has
  * to survive being ignored for a month.
  */
-const FIRST_COMMIT = Date.UTC(2026, 7, 4); // 4 August 2026
-const day = Math.floor((Date.now() - FIRST_COMMIT) / 86_400_000) + 1;
+const day = dayOf();
 const count = entries.length;
 ---
 

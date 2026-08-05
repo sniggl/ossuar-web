@@ -38,6 +38,14 @@ const reddit = {
 
 export const channels = [discord, twitch, reddit] as const;
 
+/**
+ * The feed is a channel too, and it is printed in both the follow band and the
+ * foot of every journal entry. The `href` is an internal path, so a consumer
+ * wraps it in `url()` the way it wraps every other internal link — that is the
+ * only reason it is not simply part of `channels`.
+ */
+export const feed = { href: '/rss.xml', handle: 'RSS', note: 'the raw feed, no middleman' } as const;
+
 /** The Supabase project behind the list. Stated once; the workflows read it from a secret. */
 const functionsBase = 'https://gxgsvusfefheybvlsllf.supabase.co/functions/v1';
 
