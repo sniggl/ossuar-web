@@ -121,38 +121,8 @@ function quarries(l: Light, seed: number) {
  */
 const glazed = lights.map((l, i) => {
   const q = quarries(l, i * 17 + 3);
-  return {
-    ...l,
-    apex: l.ys - ((l.x1 - l.x0) * Math.sqrt(3)) / 2,
-    outline: lancet(l.x0, l.x1, l.ys),
-    quarries: q,
-    net: q.map((p) => p.d).join(' '),
-  };
+  return { ...l, outline: lancet(l.x0, l.x1, l.ys), quarries: q, net: q.map((p) => p.d).join(' ') };
 });
-
-/**
- * Saddle bars — the iron rods that hold leaded glazing flat.
- *
- * Measured up from the sill on one pitch, so a bar runs at the same height in
- * all three lights the way it does in a real multi-light window.
- *
- * 150 is the pitch because it is the one that clears the heads. The topmost bar
- * lands at 106, above every crown — the Dragon's is the highest at 119 — and the
- * middle at 256, below six of the eight jaws. Bird and Giant reach 262, so their
- * beak and chin cross it by about six units; that reads as the bar passing in
- * front of them, which is what a saddle bar does. No nearby pitch does better:
- * the skulls occupy 119–262, and clearing that gap entirely while still fitting
- * three bars is arithmetically impossible (it needs pitch ≥ 222 for two bars and
- * ≤ 143 for four). Every other value tried puts a bar through the middle of a
- * face instead of past a jaw.
- *
- * A bar is drawn at the light's full springer width and then clipped to the
- * glass. That is load-bearing above a springer, where the arch has already
- * curved in: hand-placed at full width, the centre light's top bar overhung the
- * glazing by 58 units on each side and read as a stray rule floating in the bay.
- */
-const BAR_PITCH = 150;
-const saddles = [1, 2, 3].map((k) => BASE - k * BAR_PITCH);
 
 /* ── the figure ──────────────────────────────────────────────────────────────
    Three stacked layers on one 100×100 lattice, cut on the game repo's own row
@@ -327,41 +297,18 @@ const worn = still
     {glazed.map((l) => <path class="mottle" d={l.outline} fill="#ffffff" filter="url(#mottle)" opacity="0.42" />)}
     {glazed.map((l) => <path d={l.outline} fill="url(#wash)" />)}
 
-    {/* Saddle bars, clipped to the glass they hold. The `+ 34` drops any bar that
-        would land so near an apex it clips to a sliver — the side lights lose the
-        topmost that way, because their arches start 125 units lower. Each takes
-        the same cream highlight as every other structural edge here, or it reads
-        as a seam in the render rather than iron in front of glass. */}
-    {
-      glazed.map((l) => (
-        <g clip-path={`url(#clip-${l.id})`}>
-          {saddles
-            .filter((y) => y > l.apex + 34)
-            .map((y) => (
-              <>
-                <line
-                  x1={l.x0}
-                  y1={y}
-                  x2={l.x1}
-                  y2={y}
-                  stroke={C.lead}
-                  stroke-width="6"
-                  opacity="0.85"
-                />
-                <line
-                  x1={l.x0}
-                  y1={y - 3.4}
-                  x2={l.x1}
-                  y2={y - 3.4}
-                  stroke={C.bone}
-                  stroke-width="1.2"
-                  opacity="0.1"
-                />
-              </>
-            ))}
-        </g>
-      ))
-    }
+    {/* No saddle bars. A real leaded window has them and this one had two rounds
+        of them; both were wrong, and the second was wrong in a way the first was
+        not. Straightening them onto one pitch so they ran at the same height
+        across all three lights — which is what a real multi-light window does —
+        turned them into a cage: three unbroken horizontals across the full width,
+        one of them at his throat. The first version escaped that only by having
+        them land at different heights per light, which is to say by accident.
+        The glazing already carries every bit of structure this needs — the quarry
+        lattice, the leading, the border band, the came, the jambs and the sill —
+        and the one thing in the picture is a figure. Horizontal rules across a
+        figure at regular intervals read as bars in front of him, because that is
+        what they are. See DESIGN.md §10. */}
 
     {/* mullions and the outer came */}
     {
