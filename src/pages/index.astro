@@ -6,6 +6,7 @@ import JournalCard from '../components/JournalCard.astro';
 import LeadedWindow from '../components/LeadedWindow.astro';
 import Masthead from '../components/Masthead.astro';
 import { entries } from '../data/journal';
+import { newsletter } from '../links';
 
 /**
  * Nothing countable on this page is typed by hand. A number a human has to
@@ -55,13 +56,24 @@ const count = entries.length;
           {
             count > 0 ? (
               <>
-                <a href="#journal">Read the journal</a>
-                <span>{count} {count === 1 ? 'post' : 'posts'} so far</span>
+                <a class="plaque" href="#journal">
+                  Read the journal
+                </a>
+                <span class="mono-note">
+                  {count} {count === 1 ? 'post' : 'posts'} so far
+                </span>
               </>
             ) : (
               <>
-                <a href="#follow">Follow the build</a>
-                <span>Nothing posted yet. The first one goes out by mail and on the feed.</span>
+                <a class="plaque" href="#follow">
+                  Follow the build
+                </a>
+                {/* Reads the same flag the band does: promising mail while the
+                    form below refuses to take an address is the site lying. */}
+                <span class="mono-note">
+                  Nothing posted yet. The first one goes out
+                  {newsletter.live ? ' by mail and on the feed.' : ' on the feed.'}
+                </span>
               </>
             )
           }
@@ -69,8 +81,8 @@ const count = entries.length;
       </div>
     </section>
 
-    <section class="journal" id="journal">
-      <div class="journal-head">
+    <section class="band" id="journal">
+      <div class="band-head">
         <h2>The Journal</h2>
         <p>When there is something to show</p>
       </div>

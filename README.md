@@ -40,6 +40,11 @@ and a `/<repo>` subpath is one line of config. `src/links.ts` holds every off-si
 
 ## The mailing list
 
+**Built, and switched off** — `emailLive` in `FollowBand.astro`. The site serves from a
+temporary domain, and collecting addresses against one that is about to change means
+migrating every subscriber days later. The band shows the slot and says so; the form is not
+in the shipped HTML.
+
 Own database, own SMTP, no mailing service. The signup form is a plain HTML `POST` to a
 Supabase Edge Function — no client JavaScript, no API key in the page — which mails a
 confirmation link and writes nothing to the list until it is clicked. Every mail carries a

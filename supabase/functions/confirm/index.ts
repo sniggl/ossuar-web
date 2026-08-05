@@ -1,22 +1,18 @@
 /**
  * The link in the opt-in mail. Turns a pending row into a confirmed one and
- * records where and when that happened, which is the consent evidence the
- * whole double opt-in exists to produce.
+ * records where and when that happened, which is the consent evidence the whole
+ * double opt-in exists to produce.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { env, seeOther } from '../_shared/mail.ts';
-
-const db = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'));
+import { db } from '../_shared/db.ts';
+import { clientIp, LANDING, seeOther } from '../_shared/env.ts';
 
 Deno.serve(async (req) => {
   const token = new URL(req.url).searchParams.get('t') ?? '';
-  if (!token) return seeOther('/404');
-
-  const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null;
+  if (!token) return seeOther(LANDING.unknown);
 
   const { data, error } = await db
     .from('subscribers')
-    .update({ status: 'confirmed', confirmed_at: new Date().toISOString(), confirm_ip: ip })
+    .update({ status: 'confirmed', confirmed_at: new Date().toISOString(), confirm_ip: clientIp(req) })
     .eq('token', token)
     .neq('status', 'unsubscribed')
     .select('id')
@@ -24,8 +20,8 @@ Deno.serve(async (req) => {
 
   if (error) console.error('confirm: update failed', error.message);
 
-  // An unknown or spent token lands on the 404 rather than claiming success —
-  // a page that says "you are on the list" when nobody is would be a lie the
+  // An unknown or spent token lands on the 404 rather than claiming success — a
+  // page that says "you are on the list" when nobody is would be a lie the
   // reader has no way to check.
-  return seeOther(data ? '/confirmed/' : '/404');
+  return seeOther(data ? LANDING.confirmed : LANDING.unknown);
 });

@@ -7,16 +7,14 @@
  * hit — an unsubscribe that needs a second confirmation is an unsubscribe that
  * gets reported as spam instead.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { env, seeOther } from '../_shared/mail.ts';
-
-const db = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'));
+import { db } from '../_shared/db.ts';
+import { LANDING, seeOther } from '../_shared/env.ts';
 
 Deno.serve(async (req) => {
   const token = new URL(req.url).searchParams.get('t') ?? '';
   const oneClick = req.method === 'POST';
 
-  if (!token) return oneClick ? new Response('ok') : seeOther('/404');
+  if (!token) return oneClick ? new Response('ok') : seeOther(LANDING.unknown);
 
   const { error } = await db
     .from('subscribers')
@@ -25,5 +23,5 @@ Deno.serve(async (req) => {
 
   if (error) console.error('unsubscribe: update failed', error.message);
 
-  return oneClick ? new Response('ok') : seeOther('/unsubscribed/');
+  return oneClick ? new Response('ok') : seeOther(LANDING.unsubscribed);
 });

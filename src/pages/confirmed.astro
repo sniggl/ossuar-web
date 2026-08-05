@@ -3,7 +3,6 @@ import Base from '../layouts/Base.astro';
 import Crypt from '../components/Crypt.astro';
 import Masthead from '../components/Masthead.astro';
 import Notice from '../components/Notice.astro';
-import { entries } from '../data/journal';
 import { url } from '../paths';
 ---
 
@@ -17,11 +16,8 @@ import { url } from '../paths';
 
   <Notice eyebrow="Confirmed" title="You are on the list">
     <p class="standfirst">
-      {
-        entries.length > 0
-          ? 'That is it. The next journal entry lands in your inbox, and every mail has an unsubscribe link at the bottom of it.'
-          : 'That is it. Nothing has been posted yet — the first entry goes out to you the day it does, and every mail has an unsubscribe link at the bottom of it.'
-      }
+      That is it. The next journal entry lands in your inbox the day it goes up, and every
+      mail has an unsubscribe link at the bottom of it.
     </p>
 
     <ul>

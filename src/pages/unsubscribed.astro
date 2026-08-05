@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Crypt from '../components/Crypt.astro';
 import Masthead from '../components/Masthead.astro';
 import Notice from '../components/Notice.astro';
-import { discord, reddit, twitch } from '../links';
+import { channels } from '../links';
 import { url } from '../paths';
 ---
 
@@ -23,9 +23,11 @@ import { url } from '../paths';
 
     <ul>
       <li><a href={url('/rss.xml')}>The feed</a></li>
-      <li><a href={discord.href}>{discord.handle}</a></li>
-      <li><a href={twitch.href}>{twitch.handle}</a></li>
-      <li><a href={reddit.href}>{reddit.handle}</a></li>
+      {channels.map((c) => (
+        <li>
+          <a href={c.href}>{c.handle}</a>
+        </li>
+      ))}
     </ul>
   </Notice>
 

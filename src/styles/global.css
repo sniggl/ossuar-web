@@ -108,11 +108,11 @@ h3 {
 
 .masthead nav {
   display: flex;
-  /* Four labels and their gaps measure 288.5px; a 320px viewport leaves 265px
+  /* Six labels and their gaps measure 452px; a 320px viewport leaves 265px
      between the gutters. Without wrap the links shrink instead and break their
-     own labels mid-word — RSS moving to a second row is the better break. The
-     row gap is 1.5rem because the 44px hit areas below reach 0.7rem past each
-     link, and any tighter has the two rows fighting over the same taps. */
+     own labels mid-word — a second row is the better break. The row gap is
+     1.5rem because the 44px hit areas below reach 0.7rem past each link, and
+     any tighter has the two rows fighting over the same taps. */
   flex-wrap: wrap;
   gap: 1.5rem clamp(1.25rem, 2.5vw, 2.25rem);
   font-family: var(--font-mono);
@@ -224,7 +224,10 @@ h3 {
   flex-wrap: wrap;
 }
 
-.follow a {
+/* The site has exactly one button shape, and this is it — the hero's way into
+   the journal and the signup submit are the same object. Two copies of it drifted
+   apart the moment the second one was written. */
+.plaque {
   position: relative;
   flex: none;
   padding: 0.85rem 1.4rem;
@@ -236,13 +239,14 @@ h3 {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-decoration: none;
+  cursor: pointer;
   isolation: isolate;
   overflow: hidden;
 }
 
 /* lit from behind like the panes are, so the one button on the site is made of
    the same glass as everything else rather than borrowed from a form kit */
-.follow a::before {
+.plaque::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -252,28 +256,37 @@ h3 {
   transition: opacity 0.24s ease;
 }
 
-.follow a:hover::before,
-.follow a:focus-visible::before {
+.plaque:hover::before,
+.plaque:focus-visible::before {
   opacity: 0.58;
 }
 
-/* a sentence, so it is set as one — not shouted in tracked caps */
-.follow span {
+/* a sentence, so it is set as one — not shouted in tracked caps. The hero's
+   line beside the plaque and the note under the signup form are the same voice
+   at the same size; this site has already been burned by three copies of one
+   type decision. */
+.mono-note {
   font-family: var(--font-mono);
   font-size: 0.9rem;
   line-height: 1.6;
   letter-spacing: 0.01em;
   color: var(--bone-faint);
+  max-width: 52ch;
+}
+
+.follow .mono-note {
   max-width: 42ch;
 }
 
-/* ── journal panes ──────────────────────────────────────── */
-.journal {
+/* ── bands: the journal, and the follow band under it ───── */
+/* Two sections stacked directly on each other, so any drift between them shows
+   in a single screenshot. One class, not one each. */
+.band {
   border-top: var(--lead-w) solid var(--lead);
   padding: clamp(2.5rem, 6vw, 5rem) var(--gutter) clamp(3.5rem, 8vw, 6rem);
 }
 
-.journal-head {
+.band-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -282,12 +295,12 @@ h3 {
   margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-.journal-head h2 {
+.band-head h2 {
   font-size: clamp(1.6rem, 3vw, 2.4rem);
   letter-spacing: 0.04em;
 }
 
-.journal-head p {
+.band-head p {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 0.85rem;

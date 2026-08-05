@@ -1,10 +1,10 @@
 ---
 /**
- * The same header on all three pages. The hrefs are site-root-relative on
+ * The same header on all pages. The internal hrefs are site-root-relative on
  * purpose: `/#game` is a same-document fragment jump on the index and a real
  * navigation everywhere else, so one markup serves every page.
  */
-import { discord, reddit, twitch } from '../links';
+import { channels } from '../links';
 import { url } from '../paths';
 ---
 
@@ -13,9 +13,7 @@ import { url } from '../paths';
   <nav aria-label="Primary">
     <a href={url('/#game')}>The game</a>
     <a href={url('/#journal')}>Journal</a>
-    <a href={discord.href}>Discord</a>
-    <a href={twitch.href}>Twitch</a>
-    <a href={reddit.href}>Reddit</a>
+    {channels.map((c) => <a href={c.href}>{c.label}</a>)}
     <a href={url('/rss.xml')}>RSS</a>
   </nav>
 </header>

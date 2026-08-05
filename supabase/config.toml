@@ -1,0 +1,23 @@
+project_id = "gxgsvusfefheybvlsllf"
+
+# None of these callers can send a JWT: a plain HTML form with no key, a link in
+# an email, and a GitHub Action. The CLI defaults `verify_jwt` to true, so
+# without this file a redeploy turns the signup form into a silent 401 — and a
+# form with no JavaScript has nothing to notice that with.
+#
+# `dispatch` authenticates on its own shared-secret header; `health` reads one
+# row and returns a count of nothing.
+[functions.subscribe]
+verify_jwt = false
+
+[functions.confirm]
+verify_jwt = false
+
+[functions.unsubscribe]
+verify_jwt = false
+
+[functions.dispatch]
+verify_jwt = false
+
+[functions.health]
+verify_jwt = false

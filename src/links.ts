@@ -1,12 +1,16 @@
 /**
- * Every off-site channel, and the one endpoint the site posts to. The masthead,
- * the follow band and the footer all print these — which is the exact set of
- * files that had already drifted apart once before they were extracted.
+ * Every off-site channel, and the one endpoint the site posts to.
  *
- * `handle` is how the channel is written wherever it is named in prose, so a
- * rename or a new invite is one edit here rather than a hunt through copy.
+ * `channels` is the list every consumer maps — the masthead, the follow band
+ * and the mail landings. They each used to enumerate the same three by hand,
+ * which is the mistake this file exists to prevent: adding one is a line here,
+ * not four edits in files nobody remembers to open.
+ *
+ * `handle` is how the channel is written in prose, `label` the shorter name the
+ * nav uses — "Reddit" is a place in a menu, `r/Ossuar` is a community in a
+ * sentence — and `note` the one line the follow band prints beside it.
  */
-export const discord = {
+const discord = {
   /**
    * A permanent invite: the API reports `expires_at: null` and no use limit.
    * It can still be revoked server-side, so a dead link is a new invite here,
@@ -14,27 +18,44 @@ export const discord = {
    */
   href: 'https://discord.gg/7TmmJvpAjT',
   handle: 'Discord',
+  label: 'Discord',
+  note: 'the room where I build it',
 } as const;
 
-export const twitch = {
+const twitch = {
   href: 'https://www.twitch.tv/sniggl',
   handle: 'Twitch',
+  label: 'Twitch',
+  note: 'sometimes I build it live',
 } as const;
 
-export const reddit = {
+const reddit = {
   href: 'https://www.reddit.com/r/Ossuar/',
   handle: 'r/Ossuar',
+  label: 'Reddit',
+  note: 'posts, questions, arguments',
 } as const;
 
+export const channels = [discord, twitch, reddit] as const;
+
+/** The Supabase project behind the list. Stated once; the workflows read it from a secret. */
+const functionsBase = 'https://gxgsvusfefheybvlsllf.supabase.co/functions/v1';
+
 /**
- * The signup form posts straight to a Supabase Edge Function, because a static
- * site has nothing of its own to post to. The function is deployed with
- * `verify_jwt = false` so a plain HTML form — no key, no JavaScript — can reach
- * it, and it answers with a 303 back to `/subscribed`.
+ * `live` is false until Ossuar has its own domain. Collecting addresses against
+ * a temporary one means migrating every subscriber days later, and the first
+ * thing they would get is a "we moved" mail — so the band shows the slot and
+ * says so, and the hero reads the same flag rather than promising mail the site
+ * refuses to take.
  *
- * Its own address is the only Supabase detail the site knows: the list, the
- * confirmation mail and the send loop all live on the other side of it.
+ * Turning it on is this constant plus the secrets on the `subscribe` function.
+ * The form, the endpoints, the tables and the landing pages are all shipped.
+ *
+ * The form posts straight to that function, because a static site has nothing
+ * of its own to post to. It is deployed with `verify_jwt = false` so plain HTML
+ * — no key, no JavaScript — can reach it, and it answers with a 303.
  */
 export const newsletter = {
-  action: 'https://gxgsvusfefheybvlsllf.supabase.co/functions/v1/subscribe',
+  live: false,
+  action: `${functionsBase}/subscribe`,
 } as const;
