@@ -108,7 +108,13 @@ h3 {
 
 .masthead nav {
   display: flex;
-  gap: clamp(1.25rem, 2.5vw, 2.25rem);
+  /* Four labels and their gaps measure 288.5px; a 320px viewport leaves 265px
+     between the gutters. Without wrap the links shrink instead and break their
+     own labels mid-word — RSS moving to a second row is the better break. The
+     row gap is 1.5rem because the 44px hit areas below reach 0.7rem past each
+     link, and any tighter has the two rows fighting over the same taps. */
+  flex-wrap: wrap;
+  gap: 1.5rem clamp(1.25rem, 2.5vw, 2.25rem);
   font-family: var(--font-mono);
   font-size: 0.85rem;
   /* All-caps wants 0.05–0.1em. Past that the word shapes come apart and the

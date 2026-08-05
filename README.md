@@ -4,7 +4,7 @@ The public site and development journal for **Ossuar**, a top-down action RPG in
 development — a dead monster walking the tourist trail of his own defeat to take back the
 bones that heroes kept as souvenirs.
 
-**Live: [ossuar.braend.io](https://ossuar.braend.io)** · [RSS](https://ossuar.braend.io/rss.xml)
+**Live: [ossuar.braend.io](https://ossuar.braend.io)** · [r/Ossuar](https://www.reddit.com/r/Ossuar/) · [RSS](https://ossuar.braend.io/rss.xml)
 
 Astro, static output, **zero client JavaScript**. The hero is a procedurally generated
 stained-glass window: three gothic lancets, each an equilateral arch struck from the
