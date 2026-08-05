@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import Crypt from '../components/Crypt.astro';
+import Masthead from '../components/Masthead.astro';
+import Notice from '../components/Notice.astro';
+import { discord, reddit, twitch } from '../links';
+import { url } from '../paths';
+---
+
+<Base
+  title="Check your inbox — Ossuar"
+  description="One more step: confirm the address and you are on the list."
+  path="/subscribed"
+  noindex
+>
+  <Masthead />
+
+  <Notice eyebrow="Almost" title="Check your inbox">
+    <p class="standfirst">
+      I have sent one mail to that address with a link in it. Click the link and you are on
+      the list — until you do, nothing else gets sent. If it never turns up, look in spam,
+      then try again: the address may have had a typo in it.
+    </p>
+
+    <ul>
+      <li><a href={url('/')}>Back to the front</a></li>
+      <li><a href={discord.href}>{discord.handle}</a></li>
+      <li><a href={twitch.href}>{twitch.handle}</a></li>
+      <li><a href={reddit.href}>{reddit.handle}</a></li>
+    </ul>
+  </Notice>
+
+  <Crypt />
+</Base>

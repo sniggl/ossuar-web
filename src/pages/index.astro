@@ -1,11 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
 import Crypt from '../components/Crypt.astro';
+import FollowBand from '../components/FollowBand.astro';
 import JournalCard from '../components/JournalCard.astro';
 import LeadedWindow from '../components/LeadedWindow.astro';
 import Masthead from '../components/Masthead.astro';
 import { entries } from '../data/journal';
-import { url } from '../paths';
 
 /**
  * Nothing countable on this page is typed by hand. A number a human has to
@@ -60,8 +60,8 @@ const count = entries.length;
               </>
             ) : (
               <>
-                <a href={url('/rss.xml')}>Follow by RSS</a>
-                <span>Nothing posted yet. The first one goes out on the feed.</span>
+                <a href="#follow">Follow the build</a>
+                <span>Nothing posted yet. The first one goes out by mail and on the feed.</span>
               </>
             )
           }
@@ -81,6 +81,8 @@ const count = entries.length;
         {count > 0 ? 'Empty glazing — the rest goes up as it happens' : 'Empty glazing — nothing here yet'}
       </p>
     </section>
+
+    <FollowBand />
   </main>
 
   <Crypt />

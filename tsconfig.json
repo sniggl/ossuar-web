@@ -1,5 +1,6 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*.ts", "**/*.tsx", "**/*.astro"],
-  "exclude": ["dist"]
+  "//": "supabase/ is Deno, not Node: remote URL imports and a global `Deno`. Type-checking it against the site's config reports errors that are not errors. `astro check` covers the site; the functions are checked at deploy.",
+  "exclude": ["dist", "supabase"]
 }

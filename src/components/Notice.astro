@@ -1,0 +1,66 @@
+---
+/**
+ * The single-column notice page. The 404 and every landing in the mail flow are
+ * the same object — an eyebrow, one heading, a short paragraph and a list of
+ * ways out — so the hatch, the measure and the link styling are declared once
+ * here rather than copied into four pages.
+ *
+ * The slotted copy is rendered in the *caller's* scope, so the rules for it are
+ * `:global()` inside `.void` rather than plain selectors.
+ */
+interface Props {
+  eyebrow: string;
+  title: string;
+}
+
+const { eyebrow, title } = Astro.props;
+---
+
+<main class="void">
+  <p class="eyebrow">{eyebrow}</p>
+  <h1>{title}</h1>
+  <slot />
+</main>
+
+<style>
+  .void {
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: clamp(3rem, 12vh, 7rem) var(--gutter) clamp(4rem, 14vh, 8rem);
+    /* the empty-glazing hatch from the journal, at full page scale */
+    background: repeating-linear-gradient(
+      135deg,
+      transparent 0 11px,
+      color-mix(in srgb, var(--bone) 2.8%, transparent) 11px 12px
+    );
+  }
+
+  h1 {
+    font-size: clamp(2.2rem, 7vw, 4rem);
+    margin: 0.6rem 0 1.25rem;
+  }
+
+  .void :global(ul) {
+    margin: 2.25rem 0 0;
+    padding: 1.25rem 0 0;
+    border-top: var(--lead-w) solid var(--lead);
+    list-style: none;
+    display: grid;
+    gap: 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+  }
+
+  .void :global(ul a) {
+    color: var(--bone-dim);
+    text-decoration: none;
+    border-bottom: 1px solid var(--glass-amber);
+    padding-bottom: 0.3rem;
+  }
+
+  .void :global(ul a:hover),
+  .void :global(ul a:focus-visible) {
+    color: var(--bone);
+  }
+</style>

@@ -36,7 +36,22 @@ Two modules are the source of truth, and nothing else may restate what they hold
   deliberate while it is empty, which is the state it launches in.
 
 `src/paths.ts` puts the base path on every internal URL, so moving between a domain root
-and a `/<repo>` subpath is one line of config.
+and a `/<repo>` subpath is one line of config. `src/links.ts` holds every off-site link.
+
+## The mailing list
+
+Own database, own SMTP, no mailing service. The signup form is a plain HTML `POST` to a
+Supabase Edge Function — no client JavaScript, no API key in the page — which mails a
+confirmation link and writes nothing to the list until it is clicked. Every mail carries a
+one-click unsubscribe.
+
+Sending is a consequence of deploying: after Pages goes live, `scripts/notify.ts` hands the
+whole journal to the `dispatch` function, which sends only the entries missing from its
+`sends` ledger. The workflow remembers nothing, so re-running a deploy sends nothing twice,
+and a mail is only ever a journal entry — there is no separate newsletter to write.
+
+Functions and migrations live in `supabase/`. Credentials do not: they are environment
+secrets on the function and the repo.
 
 ## Journal posts
 

@@ -1,0 +1,33 @@
+---
+import Base from '../layouts/Base.astro';
+import Crypt from '../components/Crypt.astro';
+import Masthead from '../components/Masthead.astro';
+import Notice from '../components/Notice.astro';
+import { discord, reddit, twitch } from '../links';
+import { url } from '../paths';
+---
+
+<Base
+  title="You are off the list — Ossuar"
+  description="Unsubscribed. Nothing else will be sent to that address."
+  path="/unsubscribed"
+  noindex
+>
+  <Masthead />
+
+  <Notice eyebrow="Done" title="You are off the list">
+    <p class="standfirst">
+      Nothing else goes to that address. No hard feelings and no exit survey — the feed and
+      the rest of it are still open if you want the build without the inbox.
+    </p>
+
+    <ul>
+      <li><a href={url('/rss.xml')}>The feed</a></li>
+      <li><a href={discord.href}>{discord.handle}</a></li>
+      <li><a href={twitch.href}>{twitch.handle}</a></li>
+      <li><a href={reddit.href}>{reddit.handle}</a></li>
+    </ul>
+  </Notice>
+
+  <Crypt />
+</Base>

@@ -4,7 +4,7 @@
  * purpose: `/#game` is a same-document fragment jump on the index and a real
  * navigation everywhere else, so one markup serves every page.
  */
-import { discord, reddit } from '../links';
+import { discord, reddit, twitch } from '../links';
 import { url } from '../paths';
 ---
 
@@ -14,6 +14,7 @@ import { url } from '../paths';
     <a href={url('/#game')}>The game</a>
     <a href={url('/#journal')}>Journal</a>
     <a href={discord.href}>Discord</a>
+    <a href={twitch.href}>Twitch</a>
     <a href={reddit.href}>Reddit</a>
     <a href={url('/rss.xml')}>RSS</a>
   </nav>

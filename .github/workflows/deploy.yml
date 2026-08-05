@@ -34,3 +34,17 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+  # The mail goes out only after the entry is actually readable: the link in it
+  # points at the page this job just published. `dispatch` decides what is new,
+  # so this runs on every push and sends nothing when nothing is.
+  notify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+      - run: bun run scripts/notify.ts
+        env:
+          DISPATCH_URL: ${{ secrets.DISPATCH_URL }}
+          DISPATCH_SECRET: ${{ secrets.DISPATCH_SECRET }}
