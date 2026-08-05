@@ -31,7 +31,9 @@ import { paletteCss } from '../tokens';
         <p class="sub">
           A top-down action RPG, built in Unity, in the open — from the first commit.
         </p>
-        <p class="url">ossuar.dev</p>
+        {/* Displayed text, so it cannot derive from `site` in astro.config.mjs —
+            this is the one place the domain is duplicated. See HANDOVER.md. */}
+        <p class="url">ossuar.braend.io</p>
       </div>
     </div>
 
