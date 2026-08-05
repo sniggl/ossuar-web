@@ -11,9 +11,8 @@ import { url } from '../paths';
   <p>Ossuar — OSS-oo-ar, from <i>ossuary</i>. Built by sniggl.</p>
   {/* The link stays on the line of the word before it: `compressHTML` drops the
       whitespace at a text→element newline, so a wrapped `is\n<a>` ships as "ison".
-      A line may only break between two runs of text, as it does after the dash. */}
+      A line here may only ever break between two runs of text. */}
   <p>
-    Every way to follow — mail, Discord, Twitch, r/Ossuar, the feed —
-    is <a href={url('/#follow')}>on the front page</a>.
+    Every way to follow is <a href={url('/#follow')}>on the front page</a>.
   </p>
 </footer>

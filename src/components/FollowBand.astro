@@ -11,6 +11,18 @@
 import { discord, newsletter, reddit, twitch } from '../links';
 import { url } from '../paths';
 
+/**
+ * The list waits for Ossuar's own domain, two days out. Collecting addresses
+ * against the temporary one would mean migrating every subscriber later for
+ * two days of signups on a site with no posts yet — so the slot is shown and
+ * says so, which this site is already good at.
+ *
+ * Turning it on is this constant plus the seven secrets on the `subscribe`
+ * function. The form, the endpoints, the tables and the three landing pages
+ * are all shipped and tested; nothing else has to be built.
+ */
+const emailLive = false;
+
 const channels = [
   { ...discord, note: 'the room where I build it' },
   { ...twitch, note: 'sometimes I build it live' },
@@ -26,36 +38,48 @@ const channels = [
   </div>
 
   <div class="lodge-body">
-    <form class="subscribe" method="post" action={newsletter.action}>
-      <label for="sub-email">By email</label>
+    {
+      emailLive ? (
+        <form class="subscribe" method="post" action={newsletter.action}>
+          <label for="sub-email">By email</label>
 
-      <div class="field">
-        <input
-          id="sub-email"
-          type="email"
-          name="email"
-          required
-          autocomplete="email"
-          spellcheck="false"
-          placeholder="you@example.com"
-        />
-        <button type="submit">Send it</button>
-      </div>
+          <div class="field">
+            <input
+              id="sub-email"
+              type="email"
+              name="email"
+              required
+              autocomplete="email"
+              spellcheck="false"
+              placeholder="you@example.com"
+            />
+            <button type="submit">Send it</button>
+          </div>
 
-      {/* Off-screen rather than hidden: a bot fills every field it can parse,
-          a person never reaches this one. It is the only spam guard a form
-          without JavaScript gets, so the function drops anything that fills it. */}
-      <p class="decoy" aria-hidden="true">
-        <label for="sub-quarry">Leave this empty</label>
-        <input id="sub-quarry" type="text" name="quarry" tabindex="-1" autocomplete="off" />
-      </p>
+          {/* Off-screen rather than hidden: a bot fills every field it can parse,
+              a person never reaches this one. It is the only spam guard a form
+              without JavaScript gets, so the function drops anything that fills it. */}
+          <p class="decoy" aria-hidden="true">
+            <label for="sub-quarry">Leave this empty</label>
+            <input id="sub-quarry" type="text" name="quarry" tabindex="-1" autocomplete="off" />
+          </p>
 
-      <p class="fine">
-        One mail per journal entry, nothing else. You confirm the address before anything is
-        sent, every mail carries a one-click unsubscribe, and it is stored in Frankfurt and
-        used for nothing but this.
-      </p>
-    </form>
+          <p class="fine">
+            One mail per journal entry, nothing else. You confirm the address before anything
+            is sent, every mail carries a one-click unsubscribe, and it is stored in
+            Frankfurt and used for nothing but this.
+          </p>
+        </form>
+      ) : (
+        <div class="subscribe">
+          <p class="label">By email</p>
+          <p class="fine">
+            Not yet. The list waits for Ossuar's own domain, so that nobody who signs up has
+            to be moved to another address later. Everything else here works today.
+          </p>
+        </div>
+      )
+    }
 
     <ul class="channels">
       {
@@ -109,8 +133,12 @@ const channels = [
   }
 
   /* ── the form ─────────────────────────────────────────── */
-  .subscribe label {
+  /* `.label` is the same slug when the form is not live: a `<label>` with no
+     control to point at is a lie to a screen reader. */
+  .subscribe label,
+  .subscribe .label {
     display: block;
+    margin: 0;
     font-family: var(--font-mono);
     font-size: 0.85rem;
     letter-spacing: 0.1em;
