@@ -36,7 +36,7 @@ Two modules are the source of truth, and nothing else may restate what they hold
   deliberate while it is empty, which is the state it launches in.
 
 `src/paths.ts` puts the base path on every internal URL, so moving between a domain root
-and a `/<repo>` subpath is one line of config. `HANDOVER.md` documents the hosting.
+and a `/<repo>` subpath is one line of config.
 
 ## Journal posts
 
