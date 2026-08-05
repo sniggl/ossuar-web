@@ -1,0 +1,211 @@
+---
+/**
+ * The east window: three lancets glazed in individual quarries.
+ * The centre light holds the real v4 base sprite, backlit. The flanking lights
+ * are the world he came back to — green and thriving, and doing fine without him.
+ *
+ * Colours come from src/tokens.ts, which is the same source the stylesheet reads.
+ * Quarry variation is seeded, so the glazing is identical on every build.
+ */
+import { url } from '../paths';
+import { palette as C, glazing } from '../tokens';
+
+const BASE = 940;
+// artwork spans y 194..956; the viewBox is cropped to it so no empty sky ships.
+
+/** Equilateral gothic arch, struck from the opposite springer. */
+function lancet(x0: number, x1: number, ys: number) {
+  const w = x1 - x0;
+  const cx = (x0 + x1) / 2;
+  const apex = +(ys - (w * Math.sqrt(3)) / 2).toFixed(2);
+  return `M ${x0} ${BASE} L ${x0} ${ys} A ${w} ${w} 0 0 1 ${cx} ${apex} A ${w} ${w} 0 0 1 ${x1} ${ys} L ${x1} ${BASE} Z`;
+}
+
+/** Deterministic hash so the glazing never shuffles between builds. */
+const rnd = (i: number, j: number, s: number) => {
+  const n = Math.sin(i * 127.1 + j * 311.7 + s * 74.7) * 43758.5453;
+  return n - Math.floor(n);
+};
+
+type Light = { id: string; x0: number; x1: number; ys: number; glass: readonly string[] };
+
+const lights: Light[] = [
+  { id: 'l', x0: 34, x1: 202, ys: 470, glass: glazing.green },
+  { id: 'c', x0: 214, x1: 406, ys: 360, glass: glazing.indigo },
+  { id: 'r', x0: 418, x1: 586, ys: 470, glass: glazing.rust },
+];
+
+const S = 42; // quarry pitch
+
+/** A diamond lattice of quarries covering a light's bounding box. */
+function quarries(l: Light, seed: number) {
+  const h = S / 2;
+  const out: { d: string; fill: string; o: number }[] = [];
+  const top = l.ys - (l.x1 - l.x0) * 0.87 - S;
+  for (let j = 0; top + j * h < BASE + S; j++) {
+    const y = top + j * h;
+    for (let i = -1; l.x0 + i * S < l.x1 + S; i++) {
+      const x = l.x0 + i * S + (j % 2 ? h : 0);
+      const r = rnd(i, j, seed);
+      out.push({
+        d: `M ${x} ${y - h} L ${x + h} ${y} L ${x} ${y + h} L ${x - h} ${y} Z`,
+        fill: l.glass[Math.floor(r * l.glass.length)]!,
+        /* rounded like every other generated number here: 17 significant digits
+           × 688 quarries is ~12 KB of the index for no visible difference, and
+           the low bits are where Math.sin can differ between JS engines. */
+        o: +(0.62 + rnd(j, i, seed + 9) * 0.38).toFixed(2),
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Glaze once. The lead net is one path holding every quarry outline as a
+ * subpath — identical output to a path per quarry, ~700 fewer nodes.
+ */
+const glazed = lights.map((l, i) => {
+  const q = quarries(l, i * 17 + 3);
+  return { ...l, outline: lancet(l.x0, l.x1, l.ys), quarries: q, net: q.map((p) => p.d).join(' ') };
+});
+
+/** Rays struck from behind him — the last light in the world still pointed his way. */
+const rays = Array.from({ length: 15 }, (_, i) => {
+  const a = (-90 + (i - 7) * 12.4) * (Math.PI / 180);
+  return { x: +(310 + Math.cos(a) * 520).toFixed(1), y: +(700 + Math.sin(a) * 520).toFixed(1) };
+});
+---
+
+<svg
+  viewBox="0 176 620 792"
+  role="img"
+  aria-labelledby="win-title"
+  preserveAspectRatio="xMidYMid meet"
+>
+  <title id="win-title">
+    A three-light stained-glass window. Ossuar's skeleton stands lit in the centre light;
+    the flanking lights are glazed in green and rust quarries.
+  </title>
+
+  <defs>
+    <radialGradient id="halo" cx="50%" cy="50%">
+      <stop offset="0%" stop-color={C['glass-cyan-lit']} stop-opacity="0.9" />
+      <stop offset="30%" stop-color={C['glass-cyan']} stop-opacity="0.38" />
+      <stop offset="100%" stop-color={C['glass-cyan-lit']} stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="wash" x1="0" y1="0" x2="0.25" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.2" />
+      <stop offset="48%" stop-color="#ffffff" stop-opacity="0.03" />
+      <stop offset="100%" stop-color={C['ink-deep']} stop-opacity="0.45" />
+    </linearGradient>
+
+    <filter id="mottle" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="3" seed="11" result="n" />
+      <feColorMatrix in="n" type="saturate" values="0" result="g" />
+      <feComponentTransfer in="g" result="soft">
+        <feFuncA type="linear" slope="0.22" intercept="0" />
+      </feComponentTransfer>
+      <feComposite in="soft" in2="SourceGraphic" operator="in" />
+    </filter>
+
+    <filter id="bloom" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="16" />
+    </filter>
+
+    {glazed.map((l) => <clipPath id={`clip-${l.id}`}><path d={l.outline} /></clipPath>)}
+  </defs>
+
+  {/* stone ground behind the glazing */}
+  {glazed.map((l) => <path d={l.outline} fill={C.lead} />)}
+
+  {
+    glazed.map((l) => (
+      <g clip-path={`url(#clip-${l.id})`}>
+        {/* the glazing itself */}
+        {l.quarries.map((q) => (
+          <path d={q.d} fill={q.fill} opacity={q.o} />
+        ))}
+
+        {/* light behind the figure, in the centre light only */}
+        {l.id === 'c' && (
+          <>
+            {rays.map((r) => (
+              <path
+                d={`M 310 700 L ${r.x} ${r.y} L ${(r.x + 54).toFixed(1)} ${(r.y + 34).toFixed(1)} Z`}
+                fill={C['glass-violet']}
+                opacity="0.55"
+              />
+            ))}
+            <circle cx="310" cy="712" r="238" fill="url(#halo)" />
+          </>
+        )}
+
+        {/* the lead net — one path, every quarry outline a subpath */}
+        <path d={l.net} fill="none" stroke={C.lead} stroke-width="3.4" />
+
+        {/* border band of gold quarries, the way a real light is edged */}
+        <path d={l.outline} fill="none" stroke={C['glass-gold']} stroke-width="30" opacity="0.5" />
+        <path
+          d={l.outline}
+          fill="none"
+          stroke={C.lead}
+          stroke-width="3.4"
+          transform="translate(0,-15)"
+          opacity="0.55"
+        />
+      </g>
+    ))
+  }
+
+  {/* the figure, at true pixel scale, standing on the sill */}
+  <g clip-path="url(#clip-c)">
+    <ellipse
+      cx="310"
+      cy="700"
+      rx="118"
+      ry="150"
+      fill={C['glass-cyan-lit']}
+      opacity="0.2"
+      filter="url(#bloom)"
+    />
+    <image
+      href={url('/art/hero/ossuar-base.png')}
+      x="182"
+      y="562"
+      width="256"
+      height="256"
+      style="image-rendering: pixelated"
+    />
+  </g>
+
+  {/* glass surface: mottle, then the wash every real pane has */}
+  {glazed.map((l) => <path d={l.outline} fill="#ffffff" filter="url(#mottle)" opacity="0.42" />)}
+  {glazed.map((l) => <path d={l.outline} fill="url(#wash)" />)}
+
+  {/* saddle bars */}
+  <g stroke={C.lead} stroke-width="6" opacity="0.85">
+    <line x1="34" y1="640" x2="202" y2="640" />
+    <line x1="418" y1="640" x2="586" y2="640" />
+    <line x1="214" y1="520" x2="406" y2="520" />
+    <line x1="34" y1="820" x2="202" y2="820" />
+    <line x1="418" y1="820" x2="586" y2="820" />
+    <line x1="214" y1="838" x2="406" y2="838" />
+  </g>
+
+  {/* mullions and the outer came */}
+  {
+    glazed.map((l) => (
+      <path d={l.outline} fill="none" stroke={C.lead} stroke-width="15" stroke-linejoin="round" />
+    ))
+  }
+  {
+    glazed.map((l) => (
+      <path d={l.outline} fill="none" stroke={C.bone} stroke-opacity="0.14" stroke-width="1.6" />
+    ))
+  }
+
+  {/* the sill the whole window stands on */}
+  <rect x="14" y={BASE} width="592" height="16" fill={C.lead} />
+  <rect x="14" y={BASE} width="592" height="2" fill={C.bone} opacity="0.12" />
+</svg>

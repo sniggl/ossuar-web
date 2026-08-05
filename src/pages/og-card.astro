@@ -1,0 +1,142 @@
+---
+/**
+ * Capture surface for /og.png — not linked, noindex, kept out of the sitemap
+ * and out of robots. Exists so the social card is the real window rather than
+ * a mock of it: load /og-card at the size src/og.ts declares and screenshot it.
+ */
+import LeadedWindow from '../components/LeadedWindow.astro';
+import { ogCard } from '../og';
+import { paletteCss } from '../tokens';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Ossuar — social card</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;900&family=Grenze:wght@400&family=JetBrains+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body style={paletteCss}>
+    <div class="card" style={`width:${ogCard.width}px;height:${ogCard.height}px`}>
+      <div class="bay"><LeadedWindow /></div>
+      <div class="say">
+        <p class="mark">Ossuar<span>.</span></p>
+        <h1>He came back for a war.<em>The war ended without him.</em></h1>
+        <p class="sub">
+          A top-down action RPG, built in Unity, in the open — from the first commit.
+        </p>
+        <p class="url">ossuar.dev</p>
+      </div>
+    </div>
+
+    <style is:global>
+      astro-dev-toolbar {
+        display: none !important;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--ink);
+        --lead-w: 3px;
+      }
+
+      /* the box itself is set inline, from src/og.ts — the same numbers
+         Base.astro advertises as og:image:width/height */
+      .card {
+        display: grid;
+        grid-template-columns: 1fr 1.08fr;
+        overflow: hidden;
+      }
+
+      .bay {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* the lead came between bay and reading column — the same divider the
+           live chancel draws, at the same weight */
+        border-right: var(--lead-w) solid var(--lead);
+        background:
+          radial-gradient(
+            90% 62% at 50% 46%,
+            var(--bay-glow) 0%,
+            var(--bay-fade) 58%,
+            var(--ink) 100%
+          ),
+          var(--ink);
+      }
+
+      /* explicit, because the card is a fixed 1200×630 and nothing here should
+         depend on how a percentage happens to resolve */
+      .bay svg {
+        height: 566px;
+        width: auto;
+        filter: drop-shadow(0 12px 60px color-mix(in srgb, var(--glass-indigo) 60%, transparent));
+      }
+
+      .say {
+        padding: 3rem 3.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.35rem;
+        color: var(--bone);
+      }
+
+      .mark {
+        margin: 0;
+        font-family: 'Grenze Gotisch', serif;
+        font-weight: 900;
+        font-size: 2rem;
+        letter-spacing: 0.18em;
+        line-height: 1;
+      }
+
+      .mark span {
+        color: var(--glass-amber);
+      }
+
+      h1 {
+        margin: 0;
+        font-family: 'Grenze Gotisch', serif;
+        font-weight: 500;
+        font-size: 3.1rem;
+        line-height: 1.08;
+        letter-spacing: 0.01em;
+      }
+
+      h1 em {
+        display: block;
+        font-style: normal;
+        color: var(--glass-amber-lit);
+      }
+
+      .sub {
+        margin: 0;
+        font-family: 'Grenze', Georgia, serif;
+        font-size: 1.32rem;
+        line-height: 1.5;
+        color: var(--bone-body);
+        max-width: 26ch;
+      }
+
+      .url {
+        margin: 0;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.95rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--glass-gold);
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+# build output and caches
+dist/
+.astro/
+node_modules/
+
+# local tooling state
+.impeccable/
+*.log
+
+# Working docs, deliberately not published. They carry the former working title,
+# game facts past the site's premise-only spoiler policy, and the open
+# trademark question — none of which belong in a public repo.
+CLAUDE.md
+PRODUCT.md
+DESIGN.md
+
+.env
+.env.*
+.DS_Store

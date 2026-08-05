@@ -1,0 +1,87 @@
+---
+import Base from '../layouts/Base.astro';
+import Crypt from '../components/Crypt.astro';
+import JournalCard from '../components/JournalCard.astro';
+import LeadedWindow from '../components/LeadedWindow.astro';
+import Masthead from '../components/Masthead.astro';
+import { entries } from '../data/journal';
+import { url } from '../paths';
+
+/**
+ * Nothing countable on this page is typed by hand. A number a human has to
+ * remember to update is a number that is wrong by next week, and this site has
+ * to survive being ignored for a month.
+ */
+const FIRST_COMMIT = Date.UTC(2026, 7, 4); // 4 August 2026
+const day = Math.floor((Date.now() - FIRST_COMMIT) / 86_400_000) + 1;
+const count = entries.length;
+---
+
+<Base
+  title="Ossuar — a dead monster comes back for his bones"
+  description="A top-down action RPG built in the open. Ossuar was the lord of every dungeon in the world until a party of adventurers killed him and split his skeleton between them as souvenirs. Follow the build from day one."
+  path="/"
+>
+  <Masthead />
+
+  <main>
+    <section class="chancel" id="game">
+      <div class="window-bay">
+        <LeadedWindow />
+      </div>
+
+      <div class="reading">
+        <p class="eyebrow">
+          In development · Unity · solo · day&nbsp;{String(day).padStart(3, '0')}
+        </p>
+
+        <h1 class="pitch">
+          <span>He came back for a war.</span> <em>The war ended without him.</em>
+        </h1>
+
+        <p class="standfirst">
+          Twenty years ago Ossuar was the lord of every dungeon in the world. A party of
+          adventurers came down into his throne room, killed him, divided his skeleton
+          between them as trophies, and went home. Now he is standing up again — and what
+          he expects is fear. What he finds is a gift shop.
+        </p>
+
+        <p class="standfirst">
+          A top-down action RPG for one or two local players, built in Unity. I post here
+          when there is something worth showing.
+        </p>
+
+        <p class="follow">
+          {
+            count > 0 ? (
+              <>
+                <a href="#journal">Read the journal</a>
+                <span>{count} {count === 1 ? 'post' : 'posts'} so far</span>
+              </>
+            ) : (
+              <>
+                <a href={url('/rss.xml')}>Follow by RSS</a>
+                <span>Nothing posted yet. The first one goes out on the feed.</span>
+              </>
+            )
+          }
+        </p>
+      </div>
+    </section>
+
+    <section class="journal" id="journal">
+      <div class="journal-head">
+        <h2>The Journal</h2>
+        <p>When there is something to show</p>
+      </div>
+
+      {count > 0 && <div class="panes">{entries.map((entry) => <JournalCard entry={entry} />)}</div>}
+
+      <p class="vacant-band">
+        {count > 0 ? 'Empty glazing — the rest goes up as it happens' : 'Empty glazing — nothing here yet'}
+      </p>
+    </section>
+  </main>
+
+  <Crypt />
+</Base>

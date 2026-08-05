@@ -1,0 +1,29 @@
+---
+import type { Entry } from '../data/journal';
+import { url } from '../paths';
+
+interface Props {
+  entry: Entry;
+}
+
+const { entry } = Astro.props;
+/* UTC, or the card reads a day earlier than the <time> beside it and the feed's
+   pubDate whenever the build runs west of Greenwich. */
+const shown = new Date(entry.date).toLocaleDateString('en-GB', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+---
+
+<a
+  class="pane"
+  href={url(`/journal/${entry.slug}/`)}
+  style={`--tint:var(--glass-${entry.tint})`}
+>
+  <time datetime={entry.date}>{shown}</time>
+  <h3>{entry.title}</h3>
+  <p>{entry.blurb}</p>
+  <span class="tag">{entry.tag}</span>
+</a>

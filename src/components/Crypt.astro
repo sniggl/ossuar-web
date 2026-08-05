@@ -1,0 +1,12 @@
+---
+/** The footer, on all three pages. Says plainly that RSS is the only channel. */
+import { url } from '../paths';
+---
+
+<footer class="crypt">
+  <p>Ossuar — OSS-oo-ar, from <i>ossuary</i>. Built by sniggl.</p>
+  <p>
+    No newsletter and no Discord yet. When there is one it goes here —
+    <a href={url('/rss.xml')}>the feed is live now</a>.
+  </p>
+</footer>

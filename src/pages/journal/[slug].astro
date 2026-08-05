@@ -1,0 +1,297 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crypt from '../../components/Crypt.astro';
+import Masthead from '../../components/Masthead.astro';
+import { entries } from '../../data/journal';
+import { url } from '../../paths';
+
+export function getStaticPaths() {
+  return entries.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+/* entries is newest first, so the one after this is the one before it. */
+const index = entries.findIndex((e) => e.slug === entry.slug);
+const older = entries[index + 1];
+/* UTC, or this reads a day off from the <time> and the feed on a build west of
+   Greenwich — and which day ships would depend on who ran the build. */
+const shown = new Date(entry.date).toLocaleDateString('en-GB', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+/* the first image is the one a reader waits on, so it is the one that loads eagerly */
+const lead = entry.body.findIndex((b) => b.kind === 'figure');
+---
+
+<Base
+  title={`${entry.title} — Ossuar`}
+  description={entry.blurb}
+  path={`/journal/${entry.slug}/`}
+  ogType="article"
+  publishedAt={entry.date}
+>
+  <Masthead />
+
+  <main class="entry-page" style={`--tint:var(--glass-${entry.tint})`}>
+    <div class="entry">
+      <article>
+      <p class="entry-meta">
+        <time datetime={entry.date}>{shown}</time>
+        <span class="tag">{entry.tag}</span>
+      </p>
+
+      <h1>{entry.title}</h1>
+      <p class="lede">{entry.blurb}</p>
+
+      {
+        entry.body.map((block, i) => {
+          if (block.kind === 'p') return <p>{block.text}</p>;
+
+          if (block.kind === 'figure')
+            return (
+              <figure class="shot">
+                <img
+                  src={url(block.src)}
+                  alt={block.alt}
+                  width={block.width}
+                  height={block.height}
+                  loading={i === lead ? 'eager' : 'lazy'}
+                  class={block.pixelated ? 'px' : undefined}
+                />
+                <figcaption>{block.caption}</figcaption>
+              </figure>
+            );
+
+          if (block.kind === 'strip')
+            return (
+              <figure class="strip">
+                <div class="strip-rail">
+                  {block.images.map((img) => (
+                    <span>
+                      <img
+                        src={url(img.src)}
+                        alt={img.alt}
+                        width="100"
+                        height="100"
+                        loading="lazy"
+                      />
+                      {img.name}
+                    </span>
+                  ))}
+                </div>
+                <figcaption>{block.caption}</figcaption>
+              </figure>
+            );
+
+          return (
+            <aside class="note">
+              <h2>{block.heading}</h2>
+              <p>{block.text}</p>
+            </aside>
+          );
+        })
+      }
+
+      </article>
+
+      <nav class="entry-nav" aria-label="Journal">
+        <a href={url('/#journal')}>← All entries</a>
+        {older && <a href={url(`/journal/${older.slug}/`)} class="next">{older.title} →</a>}
+      </nav>
+    </div>
+  </main>
+
+  <Crypt />
+</Base>
+
+<style>
+  /* An entry is a single pane taken out of the window and read close up. The
+     tint lights the head of the page the way it lights the pane this entry came
+     from, and it sits on the full-width element so the light has no edges. */
+  .entry-page {
+    background:
+      radial-gradient(
+        46% 22rem at 50% 0%,
+        color-mix(in srgb, var(--tint) 34%, transparent) 0%,
+        transparent 72%
+      );
+  }
+
+  .entry {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 3.5rem) var(--gutter) clamp(3rem, 7vw, 5rem);
+  }
+
+  .entry-meta {
+    display: flex;
+    gap: 1.25rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin: 0 0 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .entry-meta time {
+    color: var(--bone-dim);
+  }
+
+  .entry-meta .tag {
+    color: var(--glass-gold);
+  }
+
+  h1 {
+    font-size: clamp(1.9rem, 4.4vw, 3rem);
+    line-height: 1.06;
+    max-width: 22ch;
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 1.25rem 0 0;
+    font-size: 1.16em;
+    line-height: 1.55;
+    color: var(--bone);
+    max-width: 38ch;
+    text-wrap: pretty;
+  }
+
+  article p {
+    color: var(--bone-body);
+    max-width: 62ch;
+  }
+
+  /* a screenshot or a gif, leaded like everything else, reclaiming the gutter */
+  .shot {
+    margin: 2.25rem 0;
+    width: calc(100% + 2 * var(--gutter));
+    margin-inline: calc(-1 * var(--gutter));
+  }
+
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-block: var(--lead-w) solid var(--lead);
+    background: var(--lead);
+  }
+
+  .shot img.px {
+    image-rendering: pixelated;
+  }
+
+  .shot figcaption {
+    margin: 0.85rem var(--gutter) 0;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    color: var(--bone-faint);
+  }
+
+  /* The sprite layers, at true pixel scale — 1:1, because any other size
+     resamples pixel art. The rail reclaims the gutter so all seven fit one row
+     on a desktop measure that would otherwise only hold five. */
+  .strip {
+    margin: 2.25rem 0;
+    width: calc(100% + 2 * var(--gutter));
+    margin-inline: calc(-1 * var(--gutter));
+  }
+
+  .strip-rail {
+    display: grid;
+    /* 6.25rem is the sprite's own 100px — the cell never squeezes the art, and
+       seven of them fit the reclaimed width in one row */
+    grid-template-columns: repeat(auto-fit, minmax(6.25rem, 1fr));
+    gap: var(--lead-w);
+    background: var(--lead);
+    border-block: var(--lead-w) solid var(--lead);
+  }
+
+  .strip-rail span {
+    background: radial-gradient(90% 80% at 50% 30%, color-mix(in srgb, var(--tint) 40%, transparent), transparent 70%),
+      var(--ink);
+    padding: 0.9rem 0 0.7rem;
+    display: grid;
+    justify-items: center;
+    gap: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    /* tighter than the rest of the mono: BELL-EATER has to sit inside 100px */
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+  }
+
+  .strip-rail img {
+    width: 100px;
+    height: 100px;
+    image-rendering: pixelated;
+  }
+
+  .strip figcaption {
+    margin: 0.85rem var(--gutter) 0;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--bone-faint);
+  }
+
+  /* the correction, the caveat, the thing left alone on purpose */
+  .note {
+    margin: 2.25rem 0;
+    padding: 1.25rem 0 1.25rem 1.4rem;
+    border-left: var(--lead-w) solid var(--glass-gold);
+  }
+
+  .note h2 {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--glass-gold);
+    margin-bottom: 0.6rem;
+  }
+
+  .note p {
+    margin: 0;
+  }
+
+  .entry-nav {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: var(--lead-w) solid var(--lead);
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+  }
+
+  .entry-nav a {
+    color: var(--bone-dim);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 0.35rem;
+    transition: color 0.18s, border-color 0.18s;
+  }
+
+  .entry-nav a:hover,
+  .entry-nav a:focus-visible {
+    color: var(--bone);
+    border-bottom-color: var(--glass-amber);
+  }
+
+  .entry-nav .next {
+    text-align: right;
+    max-width: 24rem;
+  }
+</style>

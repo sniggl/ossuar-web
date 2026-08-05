@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- One lancet from the window: near-black ground, indigo glass, a bone-cream came. -->
+  <rect width="32" height="32" fill="#04060f"/>
+  <path d="M6 30 L6 14 A20 20 0 0 1 16 11 A20 20 0 0 1 26 14 L26 30 Z" fill="#321776"/>
+  <g fill="#3a1c88">
+    <path d="M16 12 L21 17 L16 22 L11 17 Z"/>
+    <path d="M16 22 L21 27 L16 30 L11 27 Z"/>
+  </g>
+  <path d="M6 30 L6 14 A20 20 0 0 1 16 11 A20 20 0 0 1 26 14 L26 30 Z"
+        fill="none" stroke="#02030a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M6 30 L6 14 A20 20 0 0 1 16 11 A20 20 0 0 1 26 14 L26 30 Z"
+        fill="none" stroke="#faedce" stroke-width="1" stroke-linejoin="round" opacity="0.5"/>
+  <rect x="3" y="29" width="26" height="2" fill="#faedce" opacity="0.35"/>
+</svg>

@@ -1,0 +1,467 @@
+/* Ossuar — leaded glass.
+   The colour tokens (--ink, --bone*, --glass-*) are declared in src/tokens.ts and
+   emitted into :root by Base.astro, so the window and the type cannot drift apart.
+   Everything below is structure. */
+
+:root {
+  --lead-w: 3px;
+
+  --font-display: 'Grenze Gotisch', serif;
+  --font-body: 'Grenze', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --measure: 62ch;
+  --gutter: clamp(1.25rem, 4vw, 3.5rem);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--bone);
+  font-family: var(--font-body);
+  /* Grenze is condensed: its glyphs are ~19% narrower than Georgia at the same
+     px with the same x-height, so it reads a size smaller than it is. 19–23px
+     is where it sits like a normal 17–20px text face. */
+  font-size: clamp(1.1875rem, 0.55vw + 1.06rem, 1.4375rem);
+  line-height: 1.65;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.02;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+/* ── the leaded rule: every structural edge in this design is a lead came ── */
+.came {
+  border: 0;
+  height: var(--lead-w);
+  background: var(--lead);
+  box-shadow:
+    0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+  margin: 0;
+}
+
+/* ── header ─────────────────────────────────────────────── */
+.masthead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(0.9rem, 2vw, 1.4rem) var(--gutter);
+  border-bottom: var(--lead-w) solid var(--lead);
+  background: linear-gradient(180deg, var(--lead-soft), var(--ink));
+  flex-wrap: wrap;
+}
+
+.wordmark {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.45rem, 2.6vw, 2.1rem);
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+  color: var(--bone);
+  text-decoration: none;
+  line-height: 1;
+}
+
+/* Hit areas reach 44px without moving a single glyph or rule. Blackletter caps
+   are short, so the drawn box is nowhere near a thumb's worth of target. */
+.wordmark::after,
+.masthead nav a::after {
+  content: '';
+  position: absolute;
+  inset: -0.7rem -0.4rem;
+}
+
+.wordmark span {
+  color: var(--glass-amber);
+}
+
+.masthead nav {
+  display: flex;
+  gap: clamp(1.25rem, 2.5vw, 2.25rem);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  /* All-caps wants 0.05–0.1em. Past that the word shapes come apart and the
+     reader spells instead of reading — the whole site was sitting at 0.14–0.22. */
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bone-dim);
+}
+
+.masthead nav a {
+  position: relative;
+  text-decoration: none;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid transparent;
+  transition: color 0.18s, border-color 0.18s;
+}
+
+.masthead nav a:hover,
+.masthead nav a:focus-visible {
+  color: var(--bone);
+  border-bottom-color: var(--glass-amber);
+}
+
+/* ── first viewport: window + reading column ─────────────── */
+.chancel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  min-height: calc(100svh - 5.5rem);
+  align-items: stretch;
+}
+
+.window-bay {
+  position: relative;
+  border-right: var(--lead-w) solid var(--lead);
+  background:
+    radial-gradient(90% 62% at 50% 46%, var(--bay-glow) 0%, var(--bay-fade) 58%, var(--ink) 100%),
+    var(--ink);
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 2vw, 1.75rem) clamp(0.75rem, 2vw, 2rem);
+  overflow: hidden;
+  min-height: 32rem;
+}
+
+/* the window fills its bay — a cathedral light is not a thumbnail */
+.window-bay svg {
+  width: 100%;
+  height: 100%;
+  max-height: calc(100svh - 8.5rem);
+  filter: drop-shadow(0 12px 70px color-mix(in srgb, var(--glass-indigo) 60%, transparent));
+}
+
+/* ── reading column ─────────────────────────────────────── */
+.reading {
+  padding: clamp(1.75rem, 3.4vw, 3.25rem) var(--gutter);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(1.15rem, 2.1vw, 1.7rem);
+  max-width: 44rem;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--glass-gold);
+  margin: 0;
+}
+
+.pitch {
+  font-size: clamp(1.75rem, 3.1vw, 2.9rem);
+  font-weight: 500;
+  line-height: 1.12;
+  color: var(--bone);
+  max-width: 30ch;
+  text-wrap: balance;
+}
+
+/* the two sentences are the two colours — the break between them is structural,
+   never left to wherever the line happens to run out */
+.pitch span,
+.pitch em {
+  display: block;
+}
+
+.pitch em {
+  font-style: normal;
+  color: var(--glass-amber-lit);
+}
+
+.standfirst {
+  color: var(--bone-body);
+  max-width: 46ch;
+  margin: 0;
+}
+
+/* the way into the journal — the only call to action on the page */
+.follow {
+  margin: 0;
+  padding-top: clamp(1.1rem, 2vw, 1.5rem);
+  border-top: var(--lead-w) solid var(--lead);
+  display: flex;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+.follow a {
+  position: relative;
+  flex: none;
+  padding: 0.85rem 1.4rem;
+  border: var(--lead-w) solid var(--lead);
+  background: var(--lead-soft);
+  color: var(--bone);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* lit from behind like the panes are, so the one button on the site is made of
+   the same glass as everything else rather than borrowed from a form kit */
+.follow a::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(130% 170% at 18% 0%, var(--glass-amber) 0%, transparent 72%);
+  opacity: 0.3;
+  transition: opacity 0.24s ease;
+}
+
+.follow a:hover::before,
+.follow a:focus-visible::before {
+  opacity: 0.58;
+}
+
+/* a sentence, so it is set as one — not shouted in tracked caps */
+.follow span {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: var(--bone-faint);
+  max-width: 42ch;
+}
+
+/* ── journal panes ──────────────────────────────────────── */
+.journal {
+  border-top: var(--lead-w) solid var(--lead);
+  padding: clamp(2.5rem, 6vw, 5rem) var(--gutter) clamp(3.5rem, 8vw, 6rem);
+}
+
+.journal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.journal-head h2 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  letter-spacing: 0.04em;
+}
+
+.journal-head p {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+}
+
+.panes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--lead-w);
+  background: var(--lead);
+  border: var(--lead-w) solid var(--lead);
+}
+
+.pane {
+  position: relative;
+  background: var(--ink);
+  padding: clamp(1.35rem, 2.5vw, 1.9rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 14rem;
+  text-decoration: none;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* each pane is a piece of coloured glass, lit from behind on approach */
+.pane::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(120% 90% at 20% 0%, var(--tint) 0%, transparent 70%);
+  opacity: 0.32;
+  transition: opacity 0.28s ease;
+}
+
+/* 0.58 is the ceiling, not a taste call: above it the amber and green tints
+   drag the date line under 4.5:1 — and this is the focus state too, so a
+   keyboard visitor sits in it. */
+.pane:hover::before,
+.pane:focus-visible::before {
+  opacity: 0.58;
+}
+
+.pane time {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bone-dim);
+}
+
+/* entry titles drop to the text serif: blackletter is display-only, and these
+   run long enough that legibility outranks costume. */
+.pane h3 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.4rem;
+  line-height: 1.24;
+  letter-spacing: 0;
+  color: var(--bone);
+}
+
+.pane p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--bone-body);
+}
+
+.pane .tag {
+  margin-top: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--glass-gold);
+}
+
+/* the empty glazing sits outside the grid, so auto-fit always stretches the
+   real entries across a full row however many there are */
+.vacant-band {
+  margin: 0;
+  border: var(--lead-w) solid var(--lead);
+  border-top: 0;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 7px,
+      color-mix(in srgb, var(--bone) 3.5%, transparent) 7px 8px
+    ),
+    var(--ink);
+  padding: 1.6rem 1rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+}
+
+/* ── footer ─────────────────────────────────────────────── */
+.crypt {
+  border-top: var(--lead-w) solid var(--lead);
+  padding: clamp(1.75rem, 4vw, 2.75rem) var(--gutter);
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  /* These are two sentences. They were set in tracked caps, which is a texture,
+     not a way to read — sentence case at a readable size instead. */
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: var(--bone-faint);
+}
+
+/* the cited word keeps its own voice: real serif italic, rather than a
+   monospace faked into a slant by the browser */
+.crypt i {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 1.16em;
+  letter-spacing: 0.01em;
+  color: var(--bone-dim);
+}
+
+.crypt a {
+  color: var(--bone-dim);
+  text-decoration: none;
+  border-bottom: 1px solid var(--glass-amber);
+  padding-bottom: 2px;
+}
+
+/* ── responsive ─────────────────────────────────────────── */
+@media (max-width: 60rem) {
+  .chancel {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .window-bay {
+    border-right: 0;
+    border-bottom: var(--lead-w) solid var(--lead);
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  /* Height has to follow width here, or the bay turns into a letterbox with a
+     small window stranded in it — worst around 800px, where the art was
+     filling 42% of its own bay. */
+  .window-bay svg {
+    max-height: min(76svh, 130vw);
+  }
+
+  .reading {
+    max-width: none;
+    padding-block: clamp(2rem, 8vw, 3rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Nothing on this page travels: the only transitions are colour and opacity,
+     which are feedback, not motion. Killing them would take away the one signal
+     a pane gives on hover and focus, so they stay. Keyframe animation and smooth
+     scrolling are what get suppressed — a guard for anything added later. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--glass-cyan-lit);
+  outline-offset: 3px;
+}

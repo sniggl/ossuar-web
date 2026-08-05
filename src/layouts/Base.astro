@@ -1,0 +1,81 @@
+---
+import { ogCard } from '../og';
+import { url } from '../paths';
+import { palette, paletteCss } from '../tokens';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Site-root-relative path of this page, for the canonical and og:url. */
+  path: string;
+  ogType?: 'website' | 'article';
+  publishedAt?: string;
+  /** Keep this page out of the index — and give it no canonical to assert. */
+  noindex?: boolean;
+}
+
+const { title, description, path, ogType = 'website', publishedAt, noindex } = Astro.props;
+const canonical = new URL(url(path), Astro.site).href;
+const ogImage = new URL(url('/og.png'), Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex, follow" /> : <link rel="canonical" href={canonical} />}
+
+    <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content={palette.ink} />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="Ossuar" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta
+      property="og:image:alt"
+      content="A three-light stained-glass window with Ossuar's skeleton lit in the centre light."
+    />
+    <meta property="og:image:width" content={String(ogCard.width)} />
+    <meta property="og:image:height" content={String(ogCard.height)} />
+    {publishedAt && <meta property="article:published_time" content={publishedAt} />}
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Ossuar — development journal"
+      href={url('/rss.xml')}
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;900&family=Grenze:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
+
+    <style is:global set:html={`:root{${paletteCss}}`}></style>
+  </head>
+  <body>
+    <!--
+      THESIS: The devlog as a cathedral window — leaded panes lit from behind, each entry a pane. Refuses the dark-hero-and-wishlist-button arrangement every game site ships.
+      OWN-WORLD: Near-black ground; heavy near-black leading bounding flat, unblended jewel fills — indigo, deep green, vermilion, amber, cyan — all drawn from the game's own ossuar.json. Cream #faedce reserved for bone and primary text. Grenze Gotisch display, Grenze body, mono for measured fact.
+      STORY: A visitor sees a dead king lit in glass, learns a forgotten monster is reclaiming 41 stolen bones, and reads how the thing is actually being built.
+      FIRST VIEWPORT: Full-bleed three-lancet window at left, Ossuar's real sprite backlit in the centre lancet at true pixel scale; leaded reading column at right carrying the pitch, the build state, and the journal index.
+      FORM: Stained glass, candidate 6 of 7, seed 92956225.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  @import '../styles/global.css';
+</style>
