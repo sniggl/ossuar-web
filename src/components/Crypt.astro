@@ -1,18 +1,13 @@
 ---
 /**
- * The footer, on all three page shapes. It names no channel of its own: the
- * follow band on the index owns that list, and a footer that restates it is a
- * second copy to keep in step every time a channel is added.
+ * The footer, on all three page shapes: a colophon and nothing else.
+ *
+ * It names no channel, and it no longer points at the follow band either — the
+ * masthead carries all four of them, the feed included, on every page, so a
+ * footer signpost to them was a second copy of navigation the reader had had.
  */
-import { url } from '../paths';
 ---
 
 <footer class="crypt">
   <p>Ossuar — OSS-oo-ar, from <i>ossuary</i>. Built by sniggl.</p>
-  {/* The link stays on the line of the word before it: `compressHTML` drops the
-      whitespace at a text→element newline, so a wrapped `is\n<a>` ships as "ison".
-      A line here may only ever break between two runs of text. */}
-  <p>
-    Every way to follow is <a href={url('/#follow')}>on the front page</a>.
-  </p>
 </footer>

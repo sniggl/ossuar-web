@@ -19,23 +19,14 @@ const feed = { href: url('/rss.xml'), handle: 'RSS', note: 'the raw feed, no mid
 <section class="band" id="follow">
   <div class="band-head">
     <h2>Follow the build</h2>
-    <p>No account needed for any of it</p>
   </div>
 
+  {/* The order is the point, and it is why the slot is rendered on both sides of
+      the list rather than once with a CSS `order`: whichever of the two actually
+      works goes first, in the wider column, in the DOM — so the reading order, the
+      tab order and the visual order stay the same one. */}
   <div class="band-body">
-    {
-      newsletter.live ? (
-        <SubscribeForm />
-      ) : (
-        <div class="subscribe">
-          <p class="slug">By email</p>
-          <p class="mono-note">
-            Not yet. The list waits for Ossuar's own domain, so that nobody who signs up has
-            to be moved to another address later. Everything else here works today.
-          </p>
-        </div>
-      )
-    }
+    {newsletter.live && <SubscribeForm />}
 
     <ul class="channels">
       {
@@ -47,6 +38,15 @@ const feed = { href: url('/rss.xml'), handle: 'RSS', note: 'the raw feed, no mid
         ))
       }
     </ul>
+
+    {
+      !newsletter.live && (
+        <div class="subscribe">
+          <p class="slug">By email</p>
+          <p class="mono-note">The list opens with Ossuar's own domain.</p>
+        </div>
+      )
+    }
   </div>
 </section>
 
@@ -95,7 +95,11 @@ const feed = { href: url('/rss.xml'), handle: 'RSS', note: 'the raw feed, no mid
     padding-bottom: 0;
   }
 
+  /* `position` here, the 44px box itself in global.css beside the masthead's —
+     these four links are the only conversion on the page and they were the
+     smallest targets on it. */
   .channels a {
+    position: relative;
     justify-self: start;
     font-family: var(--font-mono);
     font-size: 0.85rem;

@@ -27,3 +27,74 @@ const shown = new Date(entry.date).toLocaleDateString('en-GB', {
   <p>{entry.blurb}</p>
   <span class="tag">{entry.tag}</span>
 </a>
+
+<style>
+  /* The pane paints its own ground, which is what lets `.panes` in global.css
+     show 3px of lead through the grid gap. Those two rules are a pair. */
+  .pane {
+    position: relative;
+    background: var(--ink);
+    padding: clamp(1.35rem, 2.5vw, 1.9rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    min-height: 14rem;
+    text-decoration: none;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  /* each pane is a piece of coloured glass, lit from behind on approach */
+  .pane::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(120% 90% at 20% 0%, var(--tint) 0%, transparent 70%);
+    opacity: 0.32;
+    transition: opacity 0.28s ease;
+  }
+
+  /* 0.58 is the ceiling, not a taste call: above it the amber and green tints
+     drag the date line under 4.5:1 — and this is the focus state too, so a
+     keyboard visitor sits in it. */
+  .pane:hover::before,
+  .pane:focus-visible::before {
+    opacity: 0.58;
+  }
+
+  .pane time {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+  }
+
+  /* entry titles drop to the text serif: blackletter is display-only, and these
+     run long enough that legibility outranks costume. */
+  .pane h3 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1.4rem;
+    line-height: 1.24;
+    letter-spacing: 0;
+    color: var(--bone);
+  }
+
+  .pane p {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--bone-body);
+  }
+
+  .pane .tag {
+    margin-top: auto;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--glass-gold);
+  }
+</style>

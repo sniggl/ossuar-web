@@ -6,7 +6,7 @@ import JournalCard from '../components/JournalCard.astro';
 import LeadedWindow from '../components/LeadedWindow.astro';
 import Masthead from '../components/Masthead.astro';
 import { entries } from '../data/journal';
-import { newsletter } from '../links';
+import { url } from '../paths';
 
 /**
  * Nothing countable on this page is typed by hand. A number a human has to
@@ -31,66 +31,82 @@ const count = entries.length;
         <LeadedWindow />
       </div>
 
+      {/* Split in two so the phone can put the pitch above the window and the
+          rest below it — see the `order` in global.css's 60rem block. On desktop
+          `.reading` is still one flex column and the two halves are invisible. */}
       <div class="reading">
-        <p class="eyebrow">
-          In development · Unity · solo · day&nbsp;{String(day).padStart(3, '0')}
-        </p>
+        <div class="reading-head">
+          <p class="eyebrow">
+            In development · Unity · solo · day&nbsp;{String(day).padStart(3, '0')}
+          </p>
 
-        <h1 class="pitch">
-          <span>He came back for a war.</span> <em>The war ended without him.</em>
-        </h1>
+          <h1 class="pitch">
+            <span>He came back for a war.</span> <em>The war ended without him.</em>
+          </h1>
+        </div>
 
-        <p class="standfirst">
-          Twenty years ago Ossuar was the lord of every dungeon in the world. A party of
-          adventurers came down into his throne room, killed him, divided his skeleton
-          between them as trophies, and went home. Now he is standing up again — and what
-          he expects is fear. What he finds is a gift shop.
-        </p>
+        <div class="reading-body">
+          <p class="standfirst">
+            Twenty years ago Ossuar was the lord of every dungeon in the world. A party of
+            adventurers came down into his throne room, killed him, divided his skeleton
+            between them as trophies, and went home. Now he is standing up again — and what
+            he expects is fear. What he finds is a gift shop.
+          </p>
 
-        <p class="standfirst">
-          A top-down action RPG for one or two local players, built in Unity. I post here
-          when there is something worth showing.
-        </p>
+          <p class="standfirst">
+            A top-down action RPG for one or two local players, built in Unity. He carries no
+            weapons — he fights with whatever bones he can find, and every swap changes how he
+            moves and how he looks.
+          </p>
 
-        <p class="follow">
-          {
-            count > 0 ? (
-              <>
-                <a class="plaque" href="#journal">
-                  Read the journal
-                </a>
-                <span class="mono-note">
-                  {count} {count === 1 ? 'post' : 'posts'} so far
-                </span>
-              </>
-            ) : (
-              <>
+          <p class="follow">
+            {
+              count > 0 ? (
+                <>
+                  <a class="plaque" href="#journal">
+                    Read the journal
+                  </a>
+                  <span class="mono-note">
+                    {count} {count === 1 ? 'post' : 'posts'} so far
+                  </span>
+                </>
+              ) : (
+                /* No caption: the journal band below owns "nothing yet", and a
+                   sentence explaining a two-word button is the third copy of it. */
                 <a class="plaque" href="#follow">
-                  Follow the build
+                  Follow from day one
                 </a>
-                {/* Reads the same flag the band does: promising mail while the
-                    form below refuses to take an address is the site lying. */}
-                <span class="mono-note">
-                  Nothing posted yet. The first one goes out
-                  {newsletter.live ? ' by mail and on the feed.' : ' on the feed.'}
-                </span>
-              </>
-            )
-          }
-        </p>
+              )
+            }
+          </p>
+        </div>
       </div>
     </section>
 
-    <section class="band" id="journal">
+    {/* At zero entries this band is sized to its own content rather than to a
+        grid it does not have, and the strip says what is coming and how to hear
+        it — this is where `/#journal` in the masthead deposits a first-time
+        visitor, so it cannot just admit to being empty. */}
+    <section class:list={['band', count === 0 && 'band-vacant']} id="journal">
       <div class="band-head">
         <h2>The Journal</h2>
-        <p>When there is something to show</p>
       </div>
 
       {count > 0 && <div class="panes">{entries.map((entry) => <JournalCard entry={entry} />)}</div>}
 
       <p class="vacant-band">
-        {count > 0 ? 'Empty glazing — the rest goes up as it happens' : 'Empty glazing — nothing here yet'}
+        {
+          count > 0 ? (
+            'Empty glazing — the rest goes up as it happens'
+          ) : (
+            <>
+              {/* The `{' '}` is load-bearing: `compressHTML` drops the whitespace at a
+                  text→element newline, so a wrapped `—\n<a>` ships as "—follow". */}
+              Empty glazing. The first entry goes up when something in the game moves —{' '}
+              <a href={url('/rss.xml')}>follow by RSS</a> and it finds you.
+            </>
+          )
+        }
       </p>
     </section>
 
