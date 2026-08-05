@@ -1,15 +1,16 @@
 ---
 /** The footer, on all three pages. Names every channel that actually exists. */
-import { reddit } from '../links';
+import { discord, reddit } from '../links';
 import { url } from '../paths';
 ---
 
 <footer class="crypt">
   <p>Ossuar — OSS-oo-ar, from <i>ossuary</i>. Built by sniggl.</p>
-  {/* Both links stay on the line of the word before them: `compressHTML` drops the
-      whitespace at a text→element newline, so a wrapped `or\n<a>` ships as "orby RSS". */}
+  {/* Every link stays on the line of the word before it: `compressHTML` drops the
+      whitespace at a text→element newline, so a wrapped `or\n<a>` ships as "orby RSS".
+      A line may only break between two runs of text, as it does after the comma. */}
   <p>
-    Follow on <a href={reddit.href}>{reddit.handle}</a>, or <a href={url('/rss.xml')}>by RSS</a>.
-    No newsletter and no Discord.
+    Follow on <a href={discord.href}>{discord.handle}</a>, <a href={reddit.href}>{reddit.handle}</a>,
+    or by <a href={url('/rss.xml')}>RSS</a>. No newsletter yet.
   </p>
 </footer>

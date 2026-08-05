@@ -4,7 +4,7 @@
  * purpose: `/#game` is a same-document fragment jump on the index and a real
  * navigation everywhere else, so one markup serves every page.
  */
-import { reddit } from '../links';
+import { discord, reddit } from '../links';
 import { url } from '../paths';
 ---
 
@@ -13,6 +13,7 @@ import { url } from '../paths';
   <nav aria-label="Primary">
     <a href={url('/#game')}>The game</a>
     <a href={url('/#journal')}>Journal</a>
+    <a href={discord.href}>Discord</a>
     <a href={reddit.href}>Reddit</a>
     <a href={url('/rss.xml')}>RSS</a>
   </nav>
