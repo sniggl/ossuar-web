@@ -44,6 +44,22 @@ if (bones.length !== 8) {
   );
 }
 
+/**
+ * **The heads are placeholder art.** The game repo calls its whole generated set
+ * a working set rather than approved art, and the Hero skull is not drawn at
+ * all yet — so every file this window names is expected to be replaced. What
+ * that costs is in DESIGN.md §9; the short version is that a bone's `slug` is
+ * its filename, the 100×100 lattice and registration are what make the swap
+ * work, and the three body layers are re-derived together or not at all.
+ *
+ * There is deliberately no build-time existence check for those files: it needs
+ * `node:fs`, this project has no `@types/node`, and a hand-rolled declaration
+ * would collide with the real one the day it is installed. The quiet failure it
+ * would have caught — a renamed slug rendering an `<image>` that 404s, so the
+ * head is invisible for 4.5s of every cycle rather than erroring — is worth
+ * knowing about when swapping the art in.
+ */
+
 const BASE = 556; // the sill line; the figure's feet land exactly on it
 
 /** Equilateral gothic arch, struck from the opposite springer. */
@@ -278,7 +294,7 @@ const worn = still
     </g>
 
     {/* glass surface: mottle, then the wash every real pane has */}
-    {glazed.map((l) => <path d={l.outline} fill="#ffffff" filter="url(#mottle)" opacity="0.42" />)}
+    {glazed.map((l) => <path class="mottle" d={l.outline} fill="#ffffff" filter="url(#mottle)" opacity="0.42" />)}
     {glazed.map((l) => <path d={l.outline} fill="url(#wash)" />)}
 
     {/* saddle bars. The centre pair sits above his skull and across his shins —
@@ -398,6 +414,27 @@ const worn = still
      lines; `balance` is what stops "does." sitting alone on the second. */
   .whence {
     text-wrap: balance;
+  }
+
+  /* ── the one line that makes the motion affordable ──────────────────────
+     `#mottle` is an `feTurbulence` over three full lancets. It never changes,
+     but it sits ON TOP of everything that does, and Chrome re-ran it on every
+     repaint the animation caused: measured 42fps as shipped, 144fps with the
+     filter deleted. `will-change: filter` caches its output instead, which
+     measured **144fps with all four clocks still running** — identical to
+     deleting it, and the grain stays.
+
+     Two things this rules out, both measured and both useless here: promoting
+     the animating elements instead (`will-change: transform` on `.sun`: 42fps)
+     and `contain: paint` on these paths (42fps). The cost was never the
+     animation — it was the filter underneath being asked to recompute.
+
+     Scoped to `no-preference` because the promotion buys nothing when nothing
+     animates, and a compositing layer per lancet is real memory on a phone. */
+  @media (prefers-reduced-motion: no-preference) {
+    .mottle {
+      will-change: filter;
+    }
   }
 
   /* ── the figure's own clock ─────────────────────────────────────────────

@@ -16,7 +16,12 @@
  */
 
 export type Bone = {
-  /** the file at `public/art/hero/skull-<slug>.png` */
+  /**
+   * The file at `public/art/hero/skull-<slug>.png` — the slug *is* the filename.
+   * All eight are **placeholder art** and will be replaced; keeping the slug and
+   * the 100×100 registration is what makes that a drop-in. DESIGN.md §9 has the
+   * cases where it is not.
+   */
   slug: string;
   /** sentence case; the caption uppercases it, because a label may be uppercase */
   label: string;
