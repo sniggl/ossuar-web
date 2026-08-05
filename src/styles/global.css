@@ -173,22 +173,33 @@ h3 {
 .window-bay {
   position: relative;
   border-right: var(--lead-w) solid var(--lead);
+  /* The bay carries the window's glow, which used to be a `drop-shadow` on the
+     SVG. That is a performance rule: a filter re-rasterises its whole element
+     whenever any child changes, and the window now animates ten layers. */
   background:
-    radial-gradient(90% 62% at 50% 46%, var(--bay-glow) 0%, var(--bay-fade) 58%, var(--ink) 100%),
+    radial-gradient(
+      90% 60% at 50% 52%,
+      color-mix(in srgb, var(--glass-indigo) 42%, transparent) 0%,
+      var(--bay-glow) 34%,
+      var(--bay-fade) 64%,
+      var(--ink) 100%
+    ),
     var(--ink);
   display: grid;
   place-items: center;
-  padding: clamp(1rem, 2vw, 1.75rem) clamp(0.75rem, 2vw, 2rem);
+  /* inline 0: glazing that stops short of the bay edge reads as a picture of a
+     window, and the cut outer lights then read as a fault (§5) */
+  padding: clamp(1rem, 2vw, 1.75rem) 0;
   overflow: hidden;
   min-height: 32rem;
 }
 
-/* the window fills its bay — a cathedral light is not a thumbnail */
-.window-bay svg {
-  width: 100%;
-  height: 100%;
-  max-height: calc(100svh - 8.5rem);
-  filter: drop-shadow(0 12px 70px color-mix(in srgb, var(--glass-indigo) 60%, transparent));
+/* `.leaded` is a window plus a caption and both size from content, so without a
+   definite bound the bay grows to the window's intrinsic ratio, the chancel
+   grows with it and the fold lands below the sill. 9rem = masthead 5.5 + this
+   bay's own 3.5 of vertical padding. */
+.window-bay .leaded {
+  max-height: calc(100svh - 9rem);
 }
 
 /* ── reading column ─────────────────────────────────────── */
@@ -455,7 +466,8 @@ h3 {
   .window-bay {
     border-right: 0;
     border-bottom: var(--lead-w) solid var(--lead);
-    padding: 1.5rem 1rem 2rem;
+    /* inline 0, same reason as the desktop rule above */
+    padding: 1.5rem 0 2rem;
     /* the 32rem floor is a desktop number: here it strands the window in
        150px of empty bay once the cap below has done its work */
     min-height: 0;
@@ -467,7 +479,7 @@ h3 {
      what fixed the fold below was moving the pitch above this bay, not shrinking
      the window, and a smaller window bought nothing the reorder had not already
      paid for — it only dropped the bay back to 44% fill. */
-  .window-bay svg {
+  .window-bay .leaded {
     max-height: min(76svh, 130vw);
   }
 

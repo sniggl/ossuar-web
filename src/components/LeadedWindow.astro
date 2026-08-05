@@ -1,17 +1,50 @@
 ---
 /**
  * The east window: three lancets glazed in individual quarries.
- * The centre light holds the real v4 base sprite, backlit. The flanking lights
- * are the world he came back to — green and thriving, and doing fine without him.
+ * The centre light holds the real v4 sprite, backlit, and keeps changing — the
+ * skull layer cycles the eight real bone sets from `src/bones.ts`. The flanking
+ * lights are the world he came back to — green and thriving, doing fine without
+ * him. Art direction §1.4 locks that contrast: a lush world, one pale skeleton,
+ * which is why nothing but the centre light ever holds a figure.
+ *
+ * The window is drawn wider than its own viewBox on purpose. The outer lights
+ * run off both edges because a cathedral window is bigger than the room you
+ * stand in to look at it — and because the crop is in the viewBox rather than in
+ * CSS, it is the same crop at every breakpoint and on the social card, with no
+ * overflow trick to keep in step.
  *
  * Colours come from src/tokens.ts, which is the same source the stylesheet reads.
  * Quarry variation is seeded, so the glazing is identical on every build.
+ *
+ * `still` is the capture surface's flag: /og-card is screenshotted headlessly, so
+ * an animating window would land on whichever frame the capture happened to
+ * catch. Still renders one bone and no caption, and is deterministic.
  */
 import { url } from '../paths';
 import { palette as C, glazing } from '../tokens';
+import { bones, DWELL, ROUND } from '../bones';
 
-const BASE = 940;
-// artwork spans y 194..956; the viewBox is cropped to it so no empty sky ships.
+interface Props {
+  still?: boolean;
+}
+
+const { still = false } = Astro.props;
+
+/**
+ * The `bone-cycle` keyframes below hold a literal 12.5% — one eighth — because
+ * CSS has no way to compute a keyframe selector: `var()` is legal in a property
+ * value and illegal in a `0%`. So the one number the stylesheet cannot derive is
+ * asserted here instead, and a ninth bone fails the build at the file that has
+ * to change rather than silently showing seven of them.
+ */
+if (bones.length !== 8) {
+  throw new Error(
+    `LeadedWindow: bone-cycle keyframes are written for 8 bones, got ${bones.length}. ` +
+      `Update the 12.5% stops in this file's <style> to ${(100 / bones.length).toFixed(4)}%.`
+  );
+}
+
+const BASE = 556; // the sill line; the figure's feet land exactly on it
 
 /** Equilateral gothic arch, struck from the opposite springer. */
 function lancet(x0: number, x1: number, ys: number) {
@@ -29,13 +62,18 @@ const rnd = (i: number, j: number, s: number) => {
 
 type Light = { id: string; x0: number; x1: number; ys: number; glass: readonly string[] };
 
+/* The outer two start left of 0 and end right of 780 — the viewBox is the crop,
+   32 units off each side. Putting it here rather than in CSS is what makes it
+   the same crop on a phone, on a desktop and on the social card. */
 const lights: Light[] = [
-  { id: 'l', x0: 34, x1: 202, ys: 470, glass: glazing.green },
-  { id: 'c', x0: 214, x1: 406, ys: 360, glass: glazing.indigo },
-  { id: 'r', x0: 418, x1: 586, ys: 470, glass: glazing.rust },
+  { id: 'l', x0: -32, x1: 198, ys: 350, glass: glazing.green },
+  { id: 'c', x0: 220, x1: 560, ys: 320, glass: glazing.indigo },
+  { id: 'r', x0: 582, x1: 812, ys: 350, glass: glazing.rust },
 ];
 
-const S = 42; // quarry pitch
+const MID = 390; // the centre light's axis, and the figure's
+
+const S = 40; // quarry pitch
 
 /** A diamond lattice of quarries covering a light's bounding box. */
 function quarries(l: Light, seed: number) {
@@ -51,8 +89,9 @@ function quarries(l: Light, seed: number) {
         d: `M ${x} ${y - h} L ${x + h} ${y} L ${x} ${y + h} L ${x - h} ${y} Z`,
         fill: l.glass[Math.floor(r * l.glass.length)]!,
         /* rounded like every other generated number here: 17 significant digits
-           × 688 quarries is ~12 KB of the index for no visible difference, and
-           the low bits are where Math.sin can differ between JS engines. */
+           × hundreds of quarries is kilobytes of the index for no visible
+           difference, and the low bits are where Math.sin can differ between
+           JS engines. */
         o: +(0.62 + rnd(j, i, seed + 9) * 0.38).toFixed(2),
       });
     }
@@ -62,150 +101,410 @@ function quarries(l: Light, seed: number) {
 
 /**
  * Glaze once. The lead net is one path holding every quarry outline as a
- * subpath — identical output to a path per quarry, ~700 fewer nodes.
+ * subpath — identical output to a path per quarry, hundreds of fewer nodes.
  */
 const glazed = lights.map((l, i) => {
   const q = quarries(l, i * 17 + 3);
   return { ...l, outline: lancet(l.x0, l.x1, l.ys), quarries: q, net: q.map((p) => p.d).join(' ') };
 });
 
+/* ── the figure ──────────────────────────────────────────────────────────────
+   Three stacked layers on one 100×100 lattice, cut on the game repo's own row
+   72 — the documented leg cut, where the pelvis stops being a solid block and
+   the two femurs separate. `legs` is planted; `upper` (torso, pelvis, arms)
+   carries the skull and takes the idle bob. Verified: legs + upper + own skull
+   recomposite onto the shipped base at 0 pixels differing, which is the same
+   acceptance test the rig's own cuts are held to.
+
+   The bob is 1 source pixel DOWNWARD, which is not a detail: measured off the
+   engine's own idle capture, pose B sits 1px lower with the feet on the same
+   row. Upward would open a 1px gap at the hip, because the femur heads live in
+   `upper` and the shafts live in `legs`. */
+const FIG = 460; // side of the drawn 100×100 canvas, in user units
+const FX = MID - FIG / 2; // his own centre column is x=50, so the canvas centres on the axis
+const FY = BASE - FIG * 0.97; // row 97 is his ground line, so his feet meet the sill
+const BOB = FIG / 100; // one source pixel, in user units
+
 /** Rays struck from behind him — the last light in the world still pointed his way. */
 const rays = Array.from({ length: 15 }, (_, i) => {
   const a = (-90 + (i - 7) * 12.4) * (Math.PI / 180);
-  return { x: +(310 + Math.cos(a) * 520).toFixed(1), y: +(700 + Math.sin(a) * 520).toFixed(1) };
+  return { x: +(MID + Math.cos(a) * 580).toFixed(1), y: +(390 + Math.sin(a) * 580).toFixed(1) };
 });
+
+const shown = still ? bones.slice(0, 1) : bones;
+
+/* The alt text names the bones, so it reads them off the same list the images
+   do — spelled out longhand it was a second copy of `bones.ts`, and the length
+   guard above catches a ninth bone in the keyframes but not in a sentence. The
+   still card describes what the still card shows, which is one skull. */
+const creatures = bones.slice(1).map((b) => b.label.replace(/ skull$/i, '').toLowerCase());
+const worn = still
+  ? 'wearing his own skull'
+  : `wearing his own skull and then, in turn, each of ${creatures.length} skulls taken from ` +
+    `other creatures — ${creatures.slice(0, -1).join(', ')} and ${creatures.at(-1)}`;
 ---
 
-<svg
-  viewBox="0 176 620 792"
-  role="img"
-  aria-labelledby="win-title"
-  preserveAspectRatio="xMidYMid meet"
->
-  <title id="win-title">
-    A three-light stained-glass window. Ossuar's skeleton stands lit in the centre light;
-    the flanking lights are glazed in green and rust quarries.
-  </title>
+<figure class:list={['leaded', still && 'is-still']}>
+  {/* `YMax`, not `YMid`: whatever height the bay has spare belongs above the
+      window, as wall. Centred, the slack split in two and left ~120px of empty
+      ink between the sill and the caption that names what is standing on it. */}
+  <svg viewBox="0 10 780 580" role="img" aria-labelledby="win-title" preserveAspectRatio="xMidYMax meet">
+    <title id="win-title">
+      A three-light stained-glass window, wider than the frame that holds it. Ossuar's
+      skeleton stands lit in the centre light, {worn}. The flanking lights are glazed in
+      green and rust quarries.
+    </title>
 
-  <defs>
-    <radialGradient id="halo" cx="50%" cy="50%">
-      <stop offset="0%" stop-color={C['glass-cyan-lit']} stop-opacity="0.9" />
-      <stop offset="30%" stop-color={C['glass-cyan']} stop-opacity="0.38" />
-      <stop offset="100%" stop-color={C['glass-cyan-lit']} stop-opacity="0" />
-    </radialGradient>
+    <defs>
+      <radialGradient id="halo" cx="50%" cy="50%">
+        <stop offset="0%" stop-color={C['glass-cyan-lit']} stop-opacity="0.9" />
+        <stop offset="30%" stop-color={C['glass-cyan']} stop-opacity="0.38" />
+        <stop offset="100%" stop-color={C['glass-cyan-lit']} stop-opacity="0" />
+      </radialGradient>
 
-    <linearGradient id="wash" x1="0" y1="0" x2="0.25" y2="1">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.2" />
-      <stop offset="48%" stop-color="#ffffff" stop-opacity="0.03" />
-      <stop offset="100%" stop-color={C['ink-deep']} stop-opacity="0.45" />
-    </linearGradient>
+      <linearGradient id="wash" x1="0" y1="0" x2="0.25" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.2" />
+        <stop offset="48%" stop-color="#ffffff" stop-opacity="0.03" />
+        <stop offset="100%" stop-color={C['ink-deep']} stop-opacity="0.45" />
+      </linearGradient>
 
-    <filter id="mottle" x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="3" seed="11" result="n" />
-      <feColorMatrix in="n" type="saturate" values="0" result="g" />
-      <feComponentTransfer in="g" result="soft">
-        <feFuncA type="linear" slope="0.22" intercept="0" />
-      </feComponentTransfer>
-      <feComposite in="soft" in2="SourceGraphic" operator="in" />
-    </filter>
+      <filter id="mottle" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="3" seed="11" result="n" />
+        <feColorMatrix in="n" type="saturate" values="0" result="g" />
+        <feComponentTransfer in="g" result="soft">
+          <feFuncA type="linear" slope="0.22" intercept="0" />
+        </feComponentTransfer>
+        <feComposite in="soft" in2="SourceGraphic" operator="in" />
+      </filter>
 
-    <filter id="bloom" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="16" />
-    </filter>
+      <filter id="bloom" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="18" />
+      </filter>
 
-    {glazed.map((l) => <clipPath id={`clip-${l.id}`}><path d={l.outline} /></clipPath>)}
-  </defs>
+      {glazed.map((l) => <clipPath id={`clip-${l.id}`}><path d={l.outline} /></clipPath>)}
+    </defs>
 
-  {/* stone ground behind the glazing */}
-  {glazed.map((l) => <path d={l.outline} fill={C.lead} />)}
+    {/* stone ground behind the glazing */}
+    {glazed.map((l) => <path d={l.outline} fill={C.lead} />)}
 
-  {
-    glazed.map((l) => (
-      <g clip-path={`url(#clip-${l.id})`}>
-        {/* the glazing itself */}
-        {l.quarries.map((q) => (
-          <path d={q.d} fill={q.fill} opacity={q.o} />
-        ))}
+    {
+      glazed.map((l) => (
+        <g clip-path={`url(#clip-${l.id})`}>
+          {/* the glazing itself */}
+          {l.quarries.map((q) => (
+            <path d={q.d} fill={q.fill} opacity={q.o} />
+          ))}
 
-        {/* light behind the figure, in the centre light only */}
-        {l.id === 'c' && (
-          <>
-            {rays.map((r) => (
-              <path
-                d={`M 310 700 L ${r.x} ${r.y} L ${(r.x + 54).toFixed(1)} ${(r.y + 34).toFixed(1)} Z`}
-                fill={C['glass-violet']}
-                opacity="0.55"
-              />
-            ))}
-            <circle cx="310" cy="712" r="238" fill="url(#halo)" />
-          </>
-        )}
+          {/* light behind the figure, in the centre light only. `.flare` lifts on
+              the beat a bone lands, so the eye is told where to look without the
+              sprite pretending to blend; `.sun` is the slow drift that stops the
+              glass reading as printed. */}
+          {l.id === 'c' && (
+            <g class="flare">
+              <g class="sun">
+                {rays.map((r) => (
+                  <path
+                    d={`M ${MID} 390 L ${r.x} ${r.y} L ${(r.x + 60).toFixed(1)} ${(r.y + 38).toFixed(1)} Z`}
+                    fill={C['glass-violet']}
+                    opacity="0.55"
+                  />
+                ))}
+              </g>
+              <circle cx={MID} cy="396" r="284" fill="url(#halo)" />
+            </g>
+          )}
 
-        {/* the lead net — one path, every quarry outline a subpath */}
-        <path d={l.net} fill="none" stroke={C.lead} stroke-width="3.4" />
+          {/* the lead net — one path, every quarry outline a subpath */}
+          <path d={l.net} fill="none" stroke={C.lead} stroke-width="3.4" />
 
-        {/* border band of gold quarries, the way a real light is edged */}
-        <path d={l.outline} fill="none" stroke={C['glass-gold']} stroke-width="30" opacity="0.5" />
-        <path
-          d={l.outline}
-          fill="none"
-          stroke={C.lead}
-          stroke-width="3.4"
-          transform="translate(0,-15)"
-          opacity="0.55"
+          {/* border band of gold quarries, the way a real light is edged */}
+          <path d={l.outline} fill="none" stroke={C['glass-gold']} stroke-width="34" opacity="0.5" />
+          <path
+            d={l.outline}
+            fill="none"
+            stroke={C.lead}
+            stroke-width="3.4"
+            transform="translate(0,-17)"
+            opacity="0.55"
+          />
+        </g>
+      ))
+    }
+
+    {/* the figure, at true pixel scale, standing on the sill */}
+    <g clip-path="url(#clip-c)">
+      <ellipse
+        cx={MID}
+        cy="368"
+        rx="166"
+        ry="216"
+        fill={C['glass-cyan-lit']}
+        opacity="0.2"
+        filter="url(#bloom)"
+      />
+
+      <image
+        href={url('/art/hero/ossuar-legs.png')}
+        x={FX}
+        y={FY}
+        width={FIG}
+        height={FIG}
+        style="image-rendering: pixelated"
+      />
+
+      {/* everything above the hips rides one transform, exactly as the rig's
+          `Upper` node does — one curve rather than four. */}
+      <g class="bob">
+        <image
+          href={url('/art/hero/ossuar-upper.png')}
+          x={FX}
+          y={FY}
+          width={FIG}
+          height={FIG}
+          style="image-rendering: pixelated"
         />
+        {shown.map((b, i) => (
+          <image
+            class:list={['skull', i === 0 && 'skull-first']}
+            style={`--i:${i}; image-rendering: pixelated`}
+            href={url(`/art/hero/skull-${b.slug}.png`)}
+            x={FX}
+            y={FY}
+            width={FIG}
+            height={FIG}
+          />
+        ))}
       </g>
-    ))
-  }
+    </g>
 
-  {/* the figure, at true pixel scale, standing on the sill */}
-  <g clip-path="url(#clip-c)">
-    <ellipse
-      cx="310"
-      cy="700"
-      rx="118"
-      ry="150"
-      fill={C['glass-cyan-lit']}
-      opacity="0.2"
-      filter="url(#bloom)"
-    />
-    <image
-      href={url('/art/hero/ossuar-base.png')}
-      x="182"
-      y="562"
-      width="256"
-      height="256"
-      style="image-rendering: pixelated"
-    />
-  </g>
+    {/* glass surface: mottle, then the wash every real pane has */}
+    {glazed.map((l) => <path d={l.outline} fill="#ffffff" filter="url(#mottle)" opacity="0.42" />)}
+    {glazed.map((l) => <path d={l.outline} fill="url(#wash)" />)}
 
-  {/* glass surface: mottle, then the wash every real pane has */}
-  {glazed.map((l) => <path d={l.outline} fill="#ffffff" filter="url(#mottle)" opacity="0.42" />)}
-  {glazed.map((l) => <path d={l.outline} fill="url(#wash)" />)}
+    {/* saddle bars. The centre pair sits above his skull and across his shins —
+        a real window's bars cross whatever the glazier put behind them. */}
+    <g stroke={C.lead} stroke-width="6" opacity="0.85">
+      <line x1="-32" y1="322" x2="198" y2="322" />
+      <line x1="582" y1="322" x2="812" y2="322" />
+      <line x1="-32" y1="462" x2="198" y2="462" />
+      <line x1="582" y1="462" x2="812" y2="462" />
+      <line x1="220" y1="130" x2="560" y2="130" />
+      <line x1="220" y1="500" x2="560" y2="500" />
+    </g>
 
-  {/* saddle bars */}
-  <g stroke={C.lead} stroke-width="6" opacity="0.85">
-    <line x1="34" y1="640" x2="202" y2="640" />
-    <line x1="418" y1="640" x2="586" y2="640" />
-    <line x1="214" y1="520" x2="406" y2="520" />
-    <line x1="34" y1="820" x2="202" y2="820" />
-    <line x1="418" y1="820" x2="586" y2="820" />
-    <line x1="214" y1="838" x2="406" y2="838" />
-  </g>
+    {/* mullions and the outer came */}
+    {
+      glazed.map((l) => (
+        <path d={l.outline} fill="none" stroke={C.lead} stroke-width="17" stroke-linejoin="round" />
+      ))
+    }
+    {
+      glazed.map((l) => (
+        <path d={l.outline} fill="none" stroke={C.bone} stroke-opacity="0.14" stroke-width="1.6" />
+      ))
+    }
 
-  {/* mullions and the outer came */}
+    {/* The jambs. These are what make the crop a finished edge rather than a
+        rendering fault: the outer lights are cut because the stone frame is in
+        front of them, which is how you see a window that is wider than the
+        opening you are looking through. Without them the cut only reads as
+        deliberate while the glazing happens to reach the bay's own edge — and
+        whether it does depends on the viewport's aspect, so it would be right on
+        one screen and broken on the next. */}
+    <g clip-path="url(#clip-l)">
+      <rect x="0" y="10" width="15" height="580" fill={C.lead} />
+      <rect x="15" y="10" width="1.6" height="580" fill={C.bone} opacity="0.14" />
+    </g>
+    <g clip-path="url(#clip-r)">
+      <rect x="765" y="10" width="15" height="580" fill={C.lead} />
+      <rect x="763.4" y="10" width="1.6" height="580" fill={C.bone} opacity="0.14" />
+    </g>
+
+    {/* the sill the whole window stands on — full bleed, because the window is */}
+    <rect x="0" y={BASE} width="780" height="16" fill={C.lead} />
+    <rect x="0" y={BASE} width="780" height="2" fill={C.bone} opacity="0.12" />
+  </svg>
+
   {
-    glazed.map((l) => (
-      <path d={l.outline} fill="none" stroke={C.lead} stroke-width="15" stroke-linejoin="round" />
-    ))
+    !still && (
+      <figcaption>
+        {/* The eight names are one stack, only one lit at a time. It is hidden
+            from assistive tech because eight names read in sequence is not what
+            anyone means by a caption — the window's own <title> carries the same
+            fact as a sentence. */}
+        {/* `eyebrow` and `mono-note` are the site's own label and mono-sentence
+            roles. Declaring the type here instead would be a second copy of both
+            — which is the defect DESIGN.md §3 has already had to fix twice. Only
+            the stacking is local, because only the stacking is new. */}
+        <span class="bone eyebrow" aria-hidden="true">
+          {bones.map((b, i) => (
+            <span style={`--i:${i}`}>{b.label}</span>
+          ))}
+        </span>
+        <span class="mono-note whence">
+          Real sprite layers from the build. The same swap the game makes.
+        </span>
+      </figcaption>
+    )
   }
-  {
-    glazed.map((l) => (
-      <path d={l.outline} fill="none" stroke={C.bone} stroke-opacity="0.14" stroke-width="1.6" />
-    ))
+</figure>
+
+<style define:vars={{ dwell: `${DWELL}s`, round: `${ROUND}s`, bob: `${BOB}px` }}>
+  .leaded {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    justify-items: center;
+    gap: clamp(0.8rem, 1.5vw, 1.25rem);
+    width: 100%;
+    height: 100%;
   }
 
-  {/* the sill the whole window stands on */}
-  <rect x="14" y={BASE} width="592" height="16" fill={C.lead} />
-  <rect x="14" y={BASE} width="592" height="2" fill={C.bone} opacity="0.12" />
-</svg>
+  .leaded.is-still {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .leaded svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── the caption under the sill ─────────────────────────────────────────
+     Two roles from the site's own ramp, and the pair is the rule rather than a
+     layout: `label` is uppercase because it is a label, `note` is sentence case
+     because it is a sentence. */
+  figcaption {
+    display: grid;
+    justify-items: center;
+    gap: 0.4rem;
+    text-align: center;
+    padding-inline: 1rem;
+  }
+
+  /* the stack: every name in one grid cell, so a longer one never shifts the
+     line beneath it. Type comes from `.eyebrow`. */
+  .bone {
+    display: grid;
+    grid-template-areas: 'name';
+  }
+
+  .bone span {
+    grid-area: name;
+    opacity: 0;
+    animation: bone-cycle var(--round) step-end infinite;
+    animation-delay: calc(var(--dwell) * var(--i) * -1);
+  }
+
+  /* `.mono-note` already caps the measure at 52ch, so the sentence sets as two
+     lines; `balance` is what stops "does." sitting alone on the second. */
+  .whence {
+    text-wrap: balance;
+  }
+
+  /* ── the figure's own clock ─────────────────────────────────────────────
+     Three animations, all dividing one `--round`, which is the only reason the
+     bone, its name and the light that greets it stay on the same beat. */
+  .skull {
+    opacity: 0;
+    animation: bone-cycle var(--round) step-end infinite;
+    animation-delay: calc(var(--dwell) * var(--i) * -1);
+  }
+
+  /* One eighth of the round lit, the rest dark, held by `step-end` so the bone
+     cuts rather than blends — the engine's Sprite Swap is a hash change and has
+     no in-between to depict. The 12.5% is asserted in the frontmatter. */
+  @keyframes bone-cycle {
+    0% {
+      opacity: 1;
+    }
+    12.5% {
+      opacity: 0;
+    }
+  }
+
+  /* the idle: 2 poses, 375ms each, the upper body 1 source pixel down on the
+     second — the engine's own idle, reproduced on whole pixels so nothing
+     resamples. `step-end` is what keeps it a pose change rather than a tween. */
+  .bob {
+    transform-box: view-box;
+    animation: bob 0.75s step-end infinite;
+  }
+
+  @keyframes bob {
+    0% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(var(--bob));
+    }
+  }
+
+  /* the light greets the bone: a lift on the beat it lands, then settle */
+  .flare {
+    animation: flare var(--dwell) ease-out infinite;
+  }
+
+  @keyframes flare {
+    0% {
+      opacity: 1;
+    }
+    26% {
+      opacity: 0.62;
+    }
+    100% {
+      opacity: 0.62;
+    }
+  }
+
+  /* the sun does not stand still, and neither should the thing lighting a window */
+  /* `view-box` puts the reference box at the viewBox origin, which is y=10 here,
+     so the ray fan's user-space origin of (390, 390) is 380 down the box. */
+  .sun {
+    transform-box: view-box;
+    transform-origin: 390px 380px;
+    animation: sun 64s ease-in-out infinite alternate;
+  }
+
+  @keyframes sun {
+    from {
+      transform: rotate(-3.5deg);
+    }
+    to {
+      transform: rotate(3.5deg);
+    }
+  }
+
+  /* `still` has to actually be still. The capture surface renders one bone, but
+     the clocks kept running underneath it: 4.5s into the 36s round `.skull` is
+     already at opacity 0, so any capture path whose clock advances — a real wait
+     rather than a virtual one, a CDP shot after load — puts a headless skeleton
+     on every share of the site. Same declarations as reduced motion below, for
+     the same reason: the declared state is his own skull, lit. */
+  .is-still .skull,
+  .is-still .bob,
+  .is-still .flare,
+  .is-still .sun {
+    animation: none;
+  }
+
+  .is-still .skull-first {
+    opacity: 1;
+  }
+
+  /* Reduced motion stops every clock. The declared state is the first bone, his
+     own — so the window becomes exactly the still it was before any of this,
+     rather than an empty light. */
+  @media (prefers-reduced-motion: reduce) {
+    .bone span,
+    .skull,
+    .bob,
+    .flare,
+    .sun {
+      animation: none;
+    }
+
+    .bone span:first-child,
+    .skull-first {
+      opacity: 1;
+    }
+  }
+</style>

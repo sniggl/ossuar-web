@@ -24,7 +24,10 @@ import { paletteCss } from '../tokens';
   </head>
   <body style={paletteCss}>
     <div class="card" style={`width:${ogCard.width}px;height:${ogCard.height}px`}>
-      <div class="bay"><LeadedWindow /></div>
+      {/* `still`, because this page is screenshotted headlessly: a window mid-
+          cycle would put whichever bone the capture happened to catch on every
+          share of the site, and a different one next time it is regenerated. */}
+      <div class="bay"><LeadedWindow still /></div>
       <div class="say">
         <p class="mark">Ossuar<span>.</span></p>
         <h1>He came back for a war.<em>The war ended without him.</em></h1>
@@ -57,7 +60,10 @@ import { paletteCss } from '../tokens';
          Base.astro advertises as og:image:width/height */
       .card {
         display: grid;
-        grid-template-columns: 1fr 1.08fr;
+        /* `minmax(0, …)`, not a bare `1fr`: a bare fr track keeps an `auto`
+           minimum, so the window's own min-content width dragged the bay past
+           its share and squeezed the text column to a strip. */
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
         overflow: hidden;
       }
 
@@ -65,6 +71,8 @@ import { paletteCss } from '../tokens';
         display: flex;
         align-items: center;
         justify-content: center;
+        /* the bay is the crop, exactly as `.window-bay` is on the live page */
+        overflow: hidden;
         /* the lead came between bay and reading column — the same divider the
            live chancel draws, at the same weight */
         border-right: var(--lead-w) solid var(--lead);
@@ -78,11 +86,35 @@ import { paletteCss } from '../tokens';
           var(--ink);
       }
 
-      /* explicit, because the card is a fixed 1200×630 and nothing here should
-         depend on how a percentage happens to resolve */
-      .bay svg {
-        height: 566px;
+      /* Explicit, because the card is a fixed 1200×630 and nothing here should
+         depend on how a percentage happens to resolve. The box is the window's
+         own 780×580 viewBox at the width the bay gives it, so `meet` letterboxes
+         nothing and the outer lights are cropped by the viewBox exactly as they
+         are on the live page. The card still carries the drop-shadow: it is a
+         one-shot capture with nothing animating inside it, so the reason the
+         live bay does the glow as a gradient does not apply here. */
+      /* The window fills the card's full height and is cropped to the bay's width
+         — the same arrangement as the live page, where the glazing has to reach
+         the bay edge or the cut outer lights read as a fault (DESIGN.md §5).
+         Sizing it the other way round is what the two failed attempts here both
+         did: the window is landscape and the bay is portrait, so anything that
+         fits it whole leaves a third of the card as dead ink above it.
+         `aspect-ratio` supplies the width, so there is no second copy of the
+         window's proportions to fall out of step, and `flex: none` is what stops
+         the flex line shrinking that width back down. */
+      /* `.card .bay .leaded`, not `.bay .leaded`. Astro stamps the component's
+         own rule as `.leaded[data-astro-cid-…]`, which is also (0,2,0), and it is
+         emitted after this block — so a two-class selector here loses the tie on
+         source order and silently changes nothing. That is how the two previous
+         attempts at this rule failed while looking correct in the source. */
+      .card .bay .leaded {
+        height: 100%;
+        /* `auto` is load-bearing too: the component declares BOTH `width: 100%`
+           and `height: 100%`, and two definite sides make `aspect-ratio` a
+           no-op. Overriding only one of them leaves the box exactly as it was. */
         width: auto;
+        aspect-ratio: 780 / 580;
+        flex: none;
         filter: drop-shadow(0 12px 60px color-mix(in srgb, var(--glass-indigo) 60%, transparent));
       }
 
