@@ -203,13 +203,25 @@ h3 {
 }
 
 /* ── reading column ─────────────────────────────────────── */
+/* No max-width here, and that is the fix for the lean the page had past 1440px.
+   The column used to cap at 44rem — narrower than its own grid track on a wide
+   screen — so the hero's right edge stopped 132px short of the gutter at 1600
+   and 289px short at 1920, while the masthead, the journal strip and the footer
+   all stayed pinned to it. One band ending somewhere other than every other band
+   is what reads as the page leaning.
+   Nothing was lost: the cap governed no text. `.pitch` is 30ch and `.standfirst`
+   is 46ch, so the measure is set on the two elements that have a measure. The
+   only thing 44rem sized was the rule above the button — and that rule is now
+   the one element in the hero that states the page's right margin, which is
+   exactly what it should be doing. Measure the right edges before changing this:
+   the text above the rule is ragged and short by design, and shortening the rule
+   to match it puts the lean straight back. */
 .reading {
   padding: clamp(1.75rem, 3.4vw, 3.25rem) var(--gutter);
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: clamp(1.15rem, 2.1vw, 1.7rem);
-  max-width: 44rem;
 }
 
 /* The two halves carry the same gap as their parent, so on desktop the column
@@ -258,7 +270,8 @@ h3 {
   margin: 0;
 }
 
-/* the way into the journal — the only call to action on the page */
+/* The way into the journal — the only call to action on the page. Its rule runs
+   the full column on purpose: see `.reading` above. */
 .follow {
   margin: 0;
   padding-top: clamp(1.1rem, 2vw, 1.5rem);
@@ -493,7 +506,6 @@ h3 {
 
   .reading-head,
   .reading-body {
-    max-width: none;
     padding-inline: var(--gutter);
   }
 
