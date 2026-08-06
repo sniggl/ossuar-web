@@ -191,13 +191,30 @@ h3 {
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   min-height: calc(100svh - 5.5rem);
   align-items: stretch;
-  /* The slack alone, with no gutter added: the bay has to reach the chancel's
-     own edge (glazing that stops short of it reads as a picture of a window),
-     and the reading column already carries `--gutter` of its own. That is what
-     lands the hero's right edge on the same line as both bands and the
-     masthead — the bands add gutter to the slack, and the hero gets its gutter
-     from the reading column instead. */
-  padding-inline: var(--slack);
+  /* **The hero is the one thing that breaks the cap**, and it breaks it on one
+     side only: the bay runs to the viewport's left edge while the reading
+     column's right edge stays on the same line as both bands and the masthead.
+     The window is the page's subject, and a subject that shrinks as the screen
+     grows is the wrong trade — everything else on this page is type, which
+     cannot use extra width, and the window can.
+     End padding is the slack alone, with no gutter added: the bay has to reach
+     the chancel's own edge (glazing that stops short of it reads as a picture
+     of a window), and the reading column already carries `--gutter` of its own.
+     The bands add gutter to slack; the hero gets its gutter from the reading
+     column instead, and the two land on the same line. */
+  padding-inline: 0 var(--slack);
+}
+
+/* Above the cap, every extra pixel goes to the window rather than being split
+   with a reading column that cannot use it — `.standfirst` is 46ch and does not
+   stretch, and handing it width is what produced the dead right edge in the
+   first place. The reading track freezes at exactly the width it has at the
+   cap (`--page / 2.05`, the second track of the 1.05fr/1fr split), so at 90rem
+   this is a no-op to the pixel and there is no jump through the breakpoint. */
+@media (min-width: 90rem) {
+  .chancel {
+    grid-template-columns: minmax(0, 1fr) minmax(0, calc(var(--page) / 2.05));
+  }
 }
 
 .window-bay {
