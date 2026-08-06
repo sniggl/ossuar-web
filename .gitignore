@@ -7,15 +7,6 @@ node_modules/
 .impeccable/
 *.log
 
-# design-sync: staged scripts, generated bundle, machine state. The durable
-# inputs under .design-sync/ (config.json, NOTES.md, conventions.md, gen-css.mjs)
-# are committed; everything below is regenerated on every sync.
-.ds-sync/
-ds-bundle/
-.design-sync/.cache/
-.design-sync/learnings/
-.design-sync/node_modules
-
 # Working docs, deliberately not published. They carry the former working title,
 # game facts past the site's premise-only spoiler policy, and the open
 # trademark question — none of which belong in a public repo.
