@@ -378,14 +378,35 @@ h3 {
 }
 
 /* Both bands are a heading and nothing else: the captions that used to sit here
-   said what the thing under them already showed. It stays a flex row because the
-   heading is all it has to place, and the band owns the space below it. */
+   said what the thing under them already showed. */
 .band-head {
   display: flex;
   align-items: baseline;
-  gap: 1rem;
-  flex-wrap: wrap;
+  gap: clamp(1rem, 2vw, 2rem);
   margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+/* The came that carries the heading to the right gutter. Every band below the
+   hero was a heading marooned at the far left of a full-bleed section with two
+   thirds of the width empty beside it — the masthead spans (wordmark against
+   nav) and the hero spans (window against text), and then the page stopped
+   spanning, which is what read as everything leaning left below the fold.
+   It is a rule rather than anything with content in it because there is nothing
+   true to put there: a band that says "4 channels" or "0 posts" is a number
+   typed to fill space. Lead is what this site is made of, so the structure
+   reaches the edge and the ink does not have to.
+   `flex: 1` with a zero basis is why it never forces a wrap: it takes what is
+   left after the heading and shrinks to nothing rather than pushing itself onto
+   a second line. Baseline alignment gives a flex item with no text its bottom
+   margin edge as its baseline, which lands the came exactly on the heading's. */
+.band-head::after {
+  content: '';
+  flex: 1;
+  height: var(--lead-w);
+  background: var(--lead);
+  box-shadow:
+    0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
+    0 1px 0 rgba(0, 0, 0, 0.6);
 }
 
 .band-head h2 {

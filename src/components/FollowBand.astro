@@ -21,11 +21,16 @@ const all = [...channels, { ...feed, href: url(feed.href) }];
     <h2>Follow the build</h2>
   </div>
 
-  {/* The order is the point, and it is why the slot is rendered on both sides of
-      the list rather than once with a CSS `order`: whichever of the two actually
-      works goes first, in the wider column, in the DOM — so the reading order, the
-      tab order and the visual order stay the same one. */}
-  <div class="band-body">
+  {/* The order is the point: whichever of the two actually works goes first in
+      the DOM, so the reading order, the tab order and the visual order stay the
+      same one. While the list is off, the four channels lead and the slot closes
+      the block; when it goes live the form leads and takes its own column.
+
+      The slot is a row of this list rather than a column beside it, and that is
+      what it is: a fifth place to follow this, not yet open. As its own column it
+      was one line of type holding down half the band, so the band ended on a
+      613×225 hole above the footer — measured, not impressioned. */}
+  <div class:list={['band-body', newsletter.live && 'has-form']}>
     {newsletter.live && <SubscribeForm />}
 
     <ul class="channels">
@@ -37,33 +42,41 @@ const all = [...channels, { ...feed, href: url(feed.href) }];
           </li>
         ))
       }
-    </ul>
 
-    {
-      !newsletter.live && (
-        <div class="subscribe">
-          <p class="slug">By email</p>
-          <p class="mono-note">The list opens with Ossuar's own domain.</p>
-        </div>
-      )
-    }
+      {
+        !newsletter.live && (
+          <li class="closed">
+            <p class="slug">By email</p>
+            <span>The list opens with Ossuar's own domain.</span>
+          </li>
+        )
+      }
+    </ul>
   </div>
 </section>
 
 <style>
   .band-body {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
     gap: clamp(1.75rem, 4vw, 3.5rem);
     align-items: start;
   }
 
+  /* Two columns only once the form is live. A form needs its own room; one line
+     of type does not, and giving it a column anyway is what left the band
+     lopsided. The flag decides how many things are in this band, so the flag
+     decides how many columns it has. */
+  .band-body.has-form {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+
   /* `.slug` rather than a `<label>`: a label with no control to point at is a
-     lie to a screen reader. It is the same type either way. */
+     lie to a screen reader. It is the same type either way — and it is the
+     channel link's type without the amber underline, because it is not
+     somewhere you can go yet. */
   .subscribe :global(label),
   .slug {
     display: block;
-    margin: 0 0 0.75rem;
     font-family: var(--font-mono);
     font-size: 0.85rem;
     letter-spacing: 0.1em;
@@ -71,12 +84,36 @@ const all = [...channels, { ...feed, href: url(feed.href) }];
     color: var(--bone-dim);
   }
 
+  /* stacked above its field; the closed row is a grid cell and sets its own */
+  .subscribe :global(label) {
+    margin: 0 0 0.75rem;
+  }
+
+  .closed .slug {
+    margin: 0;
+  }
+
   .channels {
     margin: 0;
     padding: 0;
     list-style: none;
     display: grid;
-    gap: 0.9rem;
+    /* Four channels as a 2×2 block that reaches the right gutter, rather than
+       single file down the left third of a full-bleed band. Halving the row
+       width is also what keeps each label next to its own note: spread across
+       the full 1344px they stop reading as a pair. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem clamp(1.75rem, 4vw, 3.5rem);
+  }
+
+  /* the closing row: full width, because it is the one item that is not a link */
+  .closed {
+    grid-column: 1 / -1;
+  }
+
+  /* back to one file when the form has taken the other column */
+  .has-form .channels {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   /* The column is the grid's job, not the link's: give the anchor a min-width
@@ -110,8 +147,9 @@ const all = [...channels, { ...feed, href: url(feed.href) }];
   }
 
   @media (max-width: 60rem) {
-    .band-body {
-      grid-template-columns: 1fr;
+    .band-body.has-form,
+    .channels {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>
