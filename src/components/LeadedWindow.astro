@@ -1,11 +1,18 @@
 ---
 /**
  * The east window: three lancets glazed in individual quarries.
- * The centre light holds the real v4 sprite, backlit, and keeps changing — the
- * skull layer cycles the eight real bone sets from `src/bones.ts`. The flanking
- * lights are the world he came back to — green and thriving, doing fine without
- * him. Art direction §1.4 locks that contrast: a lush world, one pale skeleton,
- * which is why nothing but the centre light ever holds a figure.
+ * The centre light holds the real v4 sprite, backlit, on the engine's own idle.
+ * The flanking lights are the world he came back to — green and thriving, doing
+ * fine without him. Art direction §1.4 locks that contrast: a lush world, one
+ * pale skeleton, which is why nothing but the centre light ever holds a figure.
+ *
+ * **He wears his own skull and only his own.** The window briefly cycled the
+ * eight generated bone sets, and the generated heads are a working set rather
+ * than approved art — cycling them put the weakest art on the site on a 4.5s
+ * loop at the top of the page, which is the one place a visitor is guaranteed to
+ * look. One head that is right beats eight that are not. The three-layer split
+ * below is kept exactly as it was, so a swap is still a drop-in when the drawn
+ * heads land and there is something worth cycling.
  *
  * The window is drawn wider than its own viewBox on purpose. The outer lights
  * run off both edges because a cathedral window is bigger than the room you
@@ -18,47 +25,16 @@
  *
  * `still` is the capture surface's flag: /og-card is screenshotted headlessly, so
  * an animating window would land on whichever frame the capture happened to
- * catch. Still renders one bone and no caption, and is deterministic.
+ * catch. Still stops the idle and the sun and drops the caption.
  */
 import { url } from '../paths';
 import { palette as C, glazing } from '../tokens';
-import { bones, DWELL, ROUND } from '../bones';
 
 interface Props {
   still?: boolean;
 }
 
 const { still = false } = Astro.props;
-
-/**
- * The `bone-cycle` keyframes below hold a literal 12.5% — one eighth — because
- * CSS has no way to compute a keyframe selector: `var()` is legal in a property
- * value and illegal in a `0%`. So the one number the stylesheet cannot derive is
- * asserted here instead, and a ninth bone fails the build at the file that has
- * to change rather than silently showing seven of them.
- */
-if (bones.length !== 8) {
-  throw new Error(
-    `LeadedWindow: bone-cycle keyframes are written for 8 bones, got ${bones.length}. ` +
-      `Update the 12.5% stops in this file's <style> to ${(100 / bones.length).toFixed(4)}%.`
-  );
-}
-
-/**
- * **The heads are placeholder art.** The game repo calls its whole generated set
- * a working set rather than approved art, and the Hero skull is not drawn at
- * all yet — so every file this window names is expected to be replaced. What
- * that costs is in DESIGN.md §9; the short version is that a bone's `slug` is
- * its filename, the 100×100 lattice and registration are what make the swap
- * work, and the three body layers are re-derived together or not at all.
- *
- * There is deliberately no build-time existence check for those files: it needs
- * `node:fs`, this project has no `@types/node`, and a hand-rolled declaration
- * would collide with the real one the day it is installed. The quiet failure it
- * would have caught — a renamed slug rendering an `<image>` that 404s, so the
- * head is invisible for 4.5s of every cycle rather than erroring — is worth
- * knowing about when swapping the art in.
- */
 
 const BASE = 556; // the sill line; the figure's feet land exactly on it
 
@@ -135,7 +111,13 @@ const glazed = lights.map((l, i) => {
    The bob is 1 source pixel DOWNWARD, which is not a detail: measured off the
    engine's own idle capture, pose B sits 1px lower with the feet on the same
    row. Upward would open a 1px gap at the hip, because the femur heads live in
-   `upper` and the shafts live in `legs`. */
+   `upper` and the shafts live in `legs`.
+
+   The skull stays its own layer even though only one is ever drawn now. It is
+   what the head swap costs nothing to reach: `upper` is cut below the neck, so a
+   drawn head registered on the same 100×100 lattice drops in by filename alone.
+   Merging it into `upper` would save one `<image>` and mean re-deriving the body
+   layers to get it back. DESIGN.md §9 has the cases where the swap is not free. */
 const FIG = 460; // side of the drawn 100×100 canvas, in user units
 const FX = MID - FIG / 2; // his own centre column is x=50, so the canvas centres on the axis
 const FY = BASE - FIG * 0.97; // row 97 is his ground line, so his feet meet the sill
@@ -146,18 +128,6 @@ const rays = Array.from({ length: 15 }, (_, i) => {
   const a = (-90 + (i - 7) * 12.4) * (Math.PI / 180);
   return { x: +(MID + Math.cos(a) * 580).toFixed(1), y: +(390 + Math.sin(a) * 580).toFixed(1) };
 });
-
-const shown = still ? bones.slice(0, 1) : bones;
-
-/* The alt text names the bones, so it reads them off the same list the images
-   do — spelled out longhand it was a second copy of `bones.ts`, and the length
-   guard above catches a ninth bone in the keyframes but not in a sentence. The
-   still card describes what the still card shows, which is one skull. */
-const creatures = bones.slice(1).map((b) => b.label.replace(/ skull$/i, '').toLowerCase());
-const worn = still
-  ? 'wearing his own skull'
-  : `wearing his own skull and then, in turn, each of ${creatures.length} skulls taken from ` +
-    `other creatures — ${creatures.slice(0, -1).join(', ')} and ${creatures.at(-1)}`;
 ---
 
 <figure class:list={['leaded', still && 'is-still']}>
@@ -167,8 +137,8 @@ const worn = still
   <svg viewBox="0 10 780 580" role="img" aria-labelledby="win-title" preserveAspectRatio="xMidYMax meet">
     <title id="win-title">
       A three-light stained-glass window, wider than the frame that holds it. Ossuar's
-      skeleton stands lit in the centre light, {worn}. The flanking lights are glazed in
-      green and rust quarries.
+      skeleton stands lit in the centre light, wearing his own skull. The flanking lights are
+      glazed in green and rust quarries.
     </title>
 
     <defs>
@@ -211,13 +181,18 @@ const worn = still
             <path d={q.d} fill={q.fill} opacity={q.o} />
           ))}
 
-          {/* light behind the figure, in the centre light only. `.flare` lifts on
-              the beat a bone lands, so the eye is told where to look without the
-              sprite pretending to blend; `.sun` is the slow drift that stops the
-              glass reading as printed. */}
+          {/* Light behind the figure, in the centre light only. `.sun` is the slow
+              drift that stops the glass reading as printed.
+
+              The 0.62 is not a taste number picked here: this pair used to sit
+              inside a `.flare` group that pulsed 1 → 0.62 on the beat a bone
+              landed and then held at 0.62 for the rest of the round. With no
+              bone landing there is no beat to greet, so the pulse went — and
+              0.62 is the resting level it spent its life at, carried down onto
+              the two elements that had it. The lit glass is unchanged. */}
           {l.id === 'c' && (
-            <g class="flare">
-              <g class="sun">
+            <>
+              <g class="sun" opacity="0.62">
                 {rays.map((r) => (
                   <path
                     d={`M ${MID} 390 L ${r.x} ${r.y} L ${(r.x + 60).toFixed(1)} ${(r.y + 38).toFixed(1)} Z`}
@@ -226,8 +201,8 @@ const worn = still
                   />
                 ))}
               </g>
-              <circle cx={MID} cy="396" r="284" fill="url(#halo)" />
-            </g>
+              <circle cx={MID} cy="396" r="284" fill="url(#halo)" opacity="0.62" />
+            </>
           )}
 
           {/* the lead net — one path, every quarry outline a subpath */}
@@ -279,17 +254,14 @@ const worn = still
           height={FIG}
           style="image-rendering: pixelated"
         />
-        {shown.map((b, i) => (
-          <image
-            class:list={['skull', i === 0 && 'skull-first']}
-            style={`--i:${i}; image-rendering: pixelated`}
-            href={url(`/art/hero/skull-${b.slug}.png`)}
-            x={FX}
-            y={FY}
-            width={FIG}
-            height={FIG}
-          />
-        ))}
+        <image
+          href={url('/art/hero/skull-own.png')}
+          x={FX}
+          y={FY}
+          width={FIG}
+          height={FIG}
+          style="image-rendering: pixelated"
+        />
       </g>
     </g>
 
@@ -346,28 +318,20 @@ const worn = still
   {
     !still && (
       <figcaption>
-        {/* The eight names are one stack, only one lit at a time. It is hidden
-            from assistive tech because eight names read in sequence is not what
-            anyone means by a caption — the window's own <title> carries the same
-            fact as a sentence. */}
-        {/* `eyebrow` and `mono-note` are the site's own label and mono-sentence
-            roles. Declaring the type here instead would be a second copy of both
-            — which is the defect DESIGN.md §3 has already had to fix twice. Only
-            the stacking is local, because only the stacking is new. */}
-        <span class="bone eyebrow" aria-hidden="true">
-          {bones.map((b, i) => (
-            <span style={`--i:${i}`}>{b.label}</span>
-          ))}
-        </span>
+        {/* One line, and the only reason it is here: without it this is a
+            drawing of a skeleton, and with it it is the thing the game actually
+            runs. `mono-note` is the site's own mono-sentence role — declaring the
+            type here would be a second copy of it, which is the defect DESIGN.md
+            §3 has already had to fix twice. */}
         <span class="mono-note whence">
-          Real sprite layers from the build. The same swap the game makes.
+          The real sprite from the build, on the engine's own idle.
         </span>
       </figcaption>
     )
   }
 </figure>
 
-<style define:vars={{ dwell: `${DWELL}s`, round: `${ROUND}s`, bob: `${BOB}px` }}>
+<style define:vars={{ bob: `${BOB}px` }}>
   .leaded {
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
@@ -386,34 +350,17 @@ const worn = still
     height: 100%;
   }
 
-  /* ── the caption under the sill ─────────────────────────────────────────
-     Two roles from the site's own ramp, and the pair is the rule rather than a
-     layout: `label` is uppercase because it is a label, `note` is sentence case
-     because it is a sentence. */
+  /* ── the caption under the sill ───────────────────────────────────────── */
   figcaption {
     display: grid;
     justify-items: center;
-    gap: 0.4rem;
     text-align: center;
     padding-inline: 1rem;
   }
 
-  /* the stack: every name in one grid cell, so a longer one never shifts the
-     line beneath it. Type comes from `.eyebrow`. */
-  .bone {
-    display: grid;
-    grid-template-areas: 'name';
-  }
-
-  .bone span {
-    grid-area: name;
-    opacity: 0;
-    animation: bone-cycle var(--round) step-end infinite;
-    animation-delay: calc(var(--dwell) * var(--i) * -1);
-  }
-
-  /* `.mono-note` already caps the measure at 52ch, so the sentence sets as two
-     lines; `balance` is what stops "does." sitting alone on the second. */
+  /* `.mono-note` caps the measure at 52ch, so the sentence can set as two lines
+     on a narrow bay; `balance` is what stops one word sitting alone on the
+     second. */
   .whence {
     text-wrap: balance;
   }
@@ -423,40 +370,24 @@ const worn = still
      but it sits ON TOP of everything that does, and Chrome re-ran it on every
      repaint the animation caused: measured 42fps as shipped, 144fps with the
      filter deleted. `will-change: filter` caches its output instead, which
-     measured **144fps with all four clocks still running** — identical to
-     deleting it, and the grain stays.
+     measured **144fps with every clock still running** — identical to deleting
+     it, and the grain stays.
 
      Two things this rules out, both measured and both useless here: promoting
      the animating elements instead (`will-change: transform` on `.sun`: 42fps)
      and `contain: paint` on these paths (42fps). The cost was never the
      animation — it was the filter underneath being asked to recompute.
 
+     Cutting the bone cycle did not make this affordable: it took the clocks from
+     four to two and the filter still costs the same. Re-measured with only the
+     idle and the sun left — 34fps without this line, 144 with it, at 390, 1440
+     and 1920 alike. Deleting it is not a cleanup.
+
      Scoped to `no-preference` because the promotion buys nothing when nothing
      animates, and a compositing layer per lancet is real memory on a phone. */
   @media (prefers-reduced-motion: no-preference) {
     .mottle {
       will-change: filter;
-    }
-  }
-
-  /* ── the figure's own clock ─────────────────────────────────────────────
-     Three animations, all dividing one `--round`, which is the only reason the
-     bone, its name and the light that greets it stay on the same beat. */
-  .skull {
-    opacity: 0;
-    animation: bone-cycle var(--round) step-end infinite;
-    animation-delay: calc(var(--dwell) * var(--i) * -1);
-  }
-
-  /* One eighth of the round lit, the rest dark, held by `step-end` so the bone
-     cuts rather than blends — the engine's Sprite Swap is a hash change and has
-     no in-between to depict. The 12.5% is asserted in the frontmatter. */
-  @keyframes bone-cycle {
-    0% {
-      opacity: 1;
-    }
-    12.5% {
-      opacity: 0;
     }
   }
 
@@ -474,23 +405,6 @@ const worn = still
     }
     50% {
       transform: translateY(var(--bob));
-    }
-  }
-
-  /* the light greets the bone: a lift on the beat it lands, then settle */
-  .flare {
-    animation: flare var(--dwell) ease-out infinite;
-  }
-
-  @keyframes flare {
-    0% {
-      opacity: 1;
-    }
-    26% {
-      opacity: 0.62;
-    }
-    100% {
-      opacity: 0.62;
     }
   }
 
@@ -512,38 +426,22 @@ const worn = still
     }
   }
 
-  /* `still` has to actually be still. The capture surface renders one bone, but
-     the clocks kept running underneath it: 4.5s into the 36s round `.skull` is
-     already at opacity 0, so any capture path whose clock advances — a real wait
-     rather than a virtual one, a CDP shot after load — puts a headless skeleton
-     on every share of the site. Same declarations as reduced motion below, for
-     the same reason: the declared state is his own skull, lit. */
-  .is-still .skull,
+  /* `still` has to actually be still. /og.png is captured headlessly, and both
+     clocks below advance on any capture path whose clock is real rather than
+     virtual — so without this the social card lands on whichever pose and
+     whichever sun angle the shot happened to catch, and no two regenerations of
+     it match. Nothing here changes what is drawn, only that it holds. */
   .is-still .bob,
-  .is-still .flare,
   .is-still .sun {
     animation: none;
   }
 
-  .is-still .skull-first {
-    opacity: 1;
-  }
-
-  /* Reduced motion stops every clock. The declared state is the first bone, his
-     own — so the window becomes exactly the still it was before any of this,
-     rather than an empty light. */
+  /* Reduced motion stops both clocks. Every layer is declared visible, so what
+     is left is the window exactly as it paints on frame one. */
   @media (prefers-reduced-motion: reduce) {
-    .bone span,
-    .skull,
     .bob,
-    .flare,
     .sun {
       animation: none;
-    }
-
-    .bone span:first-child,
-    .skull-first {
-      opacity: 1;
     }
   }
 </style>

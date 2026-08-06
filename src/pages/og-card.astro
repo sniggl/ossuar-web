@@ -24,9 +24,10 @@ import { paletteCss } from '../tokens';
   </head>
   <body style={paletteCss}>
     <div class="card" style={`width:${ogCard.width}px;height:${ogCard.height}px`}>
-      {/* `still`, because this page is screenshotted headlessly: a window mid-
-          cycle would put whichever bone the capture happened to catch on every
-          share of the site, and a different one next time it is regenerated. */}
+      {/* `still`, because this page is screenshotted headlessly: the idle pose
+          and the sun's angle both advance on any capture path with a real clock,
+          so without it the card lands on whichever frame the shot caught and a
+          regeneration months later matches nothing. */}
       <div class="bay"><LeadedWindow still /></div>
       <div class="say">
         <p class="mark">Ossuar<span>.</span></p>

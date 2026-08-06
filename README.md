@@ -11,14 +11,11 @@ stained-glass window: three gothic lancets, each an equilateral arch struck from
 opposite springer, glazed with a seeded diamond lattice so the output is identical on
 every build.
 
-Standing in the centre light is the game's actual sprite, and it keeps changing. Ossuar is a
-six-slot paper doll — his skeleton was divided between the people who killed him, and he
-fights with whatever bones he can find — so the window wears his own skull and then, in turn,
-seven taken from other creatures, on the engine's own two-pose idle. Every layer is lifted
-unmodified from the game project and composited on the same 100×100 lattice the rig
-registers against; the swap is a hard cut because the engine's is. All of it is CSS on one
-clock, so the zero-JavaScript rule holds, and `prefers-reduced-motion` resolves it to a
-still.
+Standing in the centre light is the game's actual sprite, idling. It is the paper doll rather
+than a picture of one: planted legs, a bobbing upper body and the skull are three separate
+layers, each lifted unmodified from the game project and composited on the same 100×100
+lattice the rig registers against, on the engine's own two-pose idle. It is CSS, so the
+zero-JavaScript rule holds, and `prefers-reduced-motion` resolves it to a still.
 
 ## Running it
 
@@ -46,10 +43,9 @@ Two modules are the source of truth, and nothing else may restate what they hold
 
 `src/paths.ts` puts the base path on every internal URL, so moving between a domain root
 and a `/<repo>` subpath is one line of config. `src/links.ts` holds every off-site link.
-`src/bones.ts` holds the eight bones the hero cycles and the cadence it cycles on — three
-animations and a caption divide one round, so there is one number to tune rather than four
-to keep in step. The art it names is placeholder and will be replaced; a bone's slug is its
-filename, which is what makes that a drop-in.
+
+The hero's art is placeholder and will be replaced. Keeping the skull a separate layer on the
+shared lattice is what makes that a drop-in rather than a re-export.
 
 ## The mailing list
 
