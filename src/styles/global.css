@@ -11,6 +11,29 @@
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   --gutter: clamp(1.25rem, 4vw, 3.5rem);
+
+  /* Where the page stops growing. Everything above this is margin, split evenly.
+     The index had no cap at all: `--gutter` tops out at 3.5rem, so past ~1440px
+     every extra pixel of viewport was handed to the reading column, which cannot
+     use it — `.standfirst` is 46ch and `.pitch` is 30ch, and a measure does not
+     stretch. At 1900 that left ~300px of dead ink down the right of the whole
+     page while the type stayed pinned left, which is the thing that kept reading
+     as a lean after both earlier fixes: the hero's *rule* reached the gutter, but
+     the gutter itself had run away to the edge of a very wide screen.
+     There is no third option here. The empty width cannot be filled — widening
+     the measure breaks the one type rule this site cares most about, and there is
+     no content to put there that would not be invented. So it gets balanced
+     instead, which is also what `.entry` on a journal page has always done
+     (`max-width: 46rem; margin: 0 auto`). The index was simply the surface that
+     never got it. */
+  --page: 90rem;
+
+  /* Consumed by every full-bleed section below. `100%` resolves at the use site,
+     and every consumer's containing block is the viewport, so one declaration
+     keeps the masthead, the hero, both bands and the footer on one right edge —
+     which is the invariant that kept getting broken by fixing them one at a
+     time. */
+  --slack: max(0px, calc((100% - var(--page)) / 2));
 }
 
 *,
@@ -84,7 +107,7 @@ h3 {
   align-items: baseline;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: clamp(0.9rem, 2vw, 1.4rem) var(--gutter);
+  padding: clamp(0.9rem, 2vw, 1.4rem) calc(var(--gutter) + var(--slack));
   border-bottom: var(--lead-w) solid var(--lead);
   background: linear-gradient(180deg, var(--lead-soft), var(--ink));
   flex-wrap: wrap;
@@ -168,6 +191,13 @@ h3 {
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   min-height: calc(100svh - 5.5rem);
   align-items: stretch;
+  /* The slack alone, with no gutter added: the bay has to reach the chancel's
+     own edge (glazing that stops short of it reads as a picture of a window),
+     and the reading column already carries `--gutter` of its own. That is what
+     lands the hero's right edge on the same line as both bands and the
+     masthead — the bands add gutter to the slack, and the hero gets its gutter
+     from the reading column instead. */
+  padding-inline: var(--slack);
 }
 
 .window-bay {
@@ -367,7 +397,7 @@ h3 {
    in a single screenshot. One class, not one each. */
 .band {
   border-top: var(--lead-w) solid var(--lead);
-  padding: clamp(2.5rem, 6vw, 5rem) var(--gutter) clamp(3.5rem, 8vw, 6rem);
+  padding: clamp(2.5rem, 6vw, 5rem) calc(var(--gutter) + var(--slack)) clamp(3.5rem, 8vw, 6rem);
 }
 
 /* A band with no grid in it is sized to what it holds. At full padding the
@@ -472,7 +502,7 @@ h3 {
    texture, not a way to read. Sentence case at a readable size instead. */
 .crypt {
   border-top: var(--lead-w) solid var(--lead);
-  padding: clamp(1.75rem, 4vw, 2.75rem) var(--gutter);
+  padding: clamp(1.75rem, 4vw, 2.75rem) calc(var(--gutter) + var(--slack));
   font-family: var(--font-mono);
   font-size: 0.9rem;
   line-height: 1.6;
