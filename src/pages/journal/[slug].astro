@@ -233,10 +233,10 @@ const follow = [...channels, { ...feed, href: url(feed.href) }];
     border-block: var(--lead-w) solid var(--lead);
     background: var(--lead);
     /* the came's own light and shadow: --lead on --ink is 1.02:1, so the border
-       alone is a rule nobody can see */
-    box-shadow:
-      0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
-      0 1px 0 rgba(0, 0, 0, 0.6);
+       alone is a rule nobody can see. The pair is named in global.css — these
+       four edges each carried their own copy of both literals until the index
+       needed the same thing at seven more. */
+    box-shadow: var(--came-rule);
   }
 
   .shot img.px {
@@ -273,9 +273,7 @@ const follow = [...channels, { ...feed, href: url(feed.href) }];
     gap: var(--lead-w);
     background: var(--lead);
     border-block: var(--lead-w) solid var(--lead);
-    box-shadow:
-      0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
-      0 1px 0 rgba(0, 0, 0, 0.6);
+    box-shadow: var(--came-rule);
   }
 
   .strip-rail span {
@@ -338,9 +336,7 @@ const follow = [...channels, { ...feed, href: url(feed.href) }];
     margin-top: clamp(2.5rem, 6vw, 3.5rem);
     padding-top: clamp(1.5rem, 3vw, 2rem);
     border-top: var(--lead-w) solid var(--lead);
-    box-shadow:
-      0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
-      inset 0 1px 0 rgba(0, 0, 0, 0.6);
+    box-shadow: var(--came-top);
   }
 
   .entry-follow h2 {
@@ -368,9 +364,7 @@ const follow = [...channels, { ...feed, href: url(feed.href) }];
     margin-top: 2.5rem;
     padding-top: 1.5rem;
     border-top: var(--lead-w) solid var(--lead);
-    box-shadow:
-      0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
-      inset 0 1px 0 rgba(0, 0, 0, 0.6);
+    box-shadow: var(--came-top);
     display: flex;
     /* `start`, or a link stretches to the height of its tallest sibling: the
        back link measured 51px of box around 18px of text, so its hover underline

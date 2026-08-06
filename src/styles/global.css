@@ -6,6 +6,33 @@
 :root {
   --lead-w: 3px;
 
+  /* **The came's light.** `--lead` on `--ink` is 1.02:1, so 3px of it is a
+     declaration and not a line — what makes a came read is the pair around it:
+     a cream highlight on the lit side, black on the other.
+     The three recipes below exist because **a `box-shadow` is measured from the
+     border box, not from the edge that carries the border** — so a
+     `border-bottom` cannot reuse a `border-top`'s shadows, or the highlight
+     lands at the far side of the element instead of on the came. Naming them
+     here rather than restating the pair at each edge is the same rule as
+     `--lead-w`: the pair is a system invariant, and an invariant written out a
+     dozen times is a dozen things to retune.
+     **Two limits worth knowing before reaching for one of these.** They light
+     horizontal edges only: on a box bordered all round, `--came-rule` treats
+     the top and bottom and leaves the sides as bare `--lead`, which is right
+     for a slab read as a bar and is not a full bevel. And a recipe cannot be
+     half-applied — custom properties have no partial override — so any edge
+     with a paint-order hazard composes `--came-lit`/`--came-dark` by hand
+     instead. There were four recipes; the vertical one was deleted because both
+     sites that draw a vertical came have exactly that hazard and neither could
+     use it. See `.window-bay`. */
+  --came-lit: color-mix(in srgb, var(--bone) 7%, transparent);
+  --came-dark: rgba(0, 0, 0, 0.6);
+  /* a came standing free, or a lit slab bordered all round */
+  --came-rule: 0 -1px 0 var(--came-lit), 0 1px 0 var(--came-dark);
+  /* the came is this element's own top / bottom border */
+  --came-top: 0 -1px 0 var(--came-lit), inset 0 1px 0 var(--came-dark);
+  --came-bottom: inset 0 -1px 0 var(--came-lit), 0 1px 0 var(--came-dark);
+
   --font-display: 'Grenze Gotisch', serif;
   --font-body: 'Grenze', Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -91,13 +118,20 @@ h3 {
 }
 
 /* ── the leaded rule: every structural edge in this design is a lead came ── */
+/* **And every one of them now carries the light.** This class and the band
+   headings' flanking rules had the pair from the start, and the four edges on a
+   journal entry were fixed next — but the seven borders that divide the front
+   page were bare `--lead` on `--ink` for the whole life of this file, which made
+   the site's central material claim true on the page almost nobody lands on
+   first and false on the one everybody does. The sections read as butted
+   together rather than leaded. The fix is the recipes above applied at each
+   edge; the finding is the shape of the mistake: **a visual invariant was fixed
+   on the surface where it was noticed, not on the surface where it shows.** */
 .came {
   border: 0;
   height: var(--lead-w);
   background: var(--lead);
-  box-shadow:
-    0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
-    0 1px 0 rgba(0, 0, 0, 0.6);
+  box-shadow: var(--came-rule);
   margin: 0;
 }
 
@@ -109,6 +143,10 @@ h3 {
   gap: 1.5rem;
   padding: clamp(0.9rem, 2vw, 1.4rem) calc(var(--gutter) + var(--slack));
   border-bottom: var(--lead-w) solid var(--lead);
+  /* Half of this came is drawn by `.window-bay`, which covers the shadow below
+     it on the index — if what sits under the masthead ever changes, that rule
+     changes with it. */
+  box-shadow: var(--came-bottom);
   background: linear-gradient(180deg, var(--lead-soft), var(--ink));
   flex-wrap: wrap;
 }
@@ -233,9 +271,33 @@ h3 {
   }
 }
 
+/* **The bay lights its own three cames, and that is not a courtesy to its
+   neighbours — it is the only element that can.** An `inset` shadow paints under
+   the element's descendants and an outer one paints under any opaque box that
+   overlaps it, and this bay is both: it is `position: relative` with an opaque
+   background, and its child glazing reaches its content edge on purpose.
+   Measured before this rule existed, at 1440: the masthead's under-shadow
+   painted **702px of 1440** and the journal band's highlight painted **columns
+   738–1439** — both stopping dead at the bay's right edge, which is worse than
+   the uniform dull line they replaced. The vertical highlight fared no better,
+   painting **485px of the bay's 812** because the glazing covered the rest.
+   So each half moves to the side of the joint that nothing can paint over: the
+   two horizontal ones become `inset`s in the bay's *vertical padding*, which the
+   glazing never reaches, and the vertical one becomes `::after` below — a
+   positioned box, and therefore above the in-flow SVG.
+   **This is scoped to the two-column layout.** Under 60rem the bay's top is not
+   a came at all (`.reading-head` sits above it), and an inset there would draw a
+   shadow under nothing. */
 .window-bay {
   position: relative;
   border-right: var(--lead-w) solid var(--lead);
+  box-shadow:
+    /* the masthead's came, continued across the bay */
+    inset 0 1px 0 var(--came-dark),
+    /* the journal band's came, continued across the bay */
+    inset 0 -1px 0 var(--came-lit),
+    /* its own vertical came: only the outer half survives here */
+    1px 0 0 var(--came-dark);
   /* The bay carries the window's glow, which used to be a `drop-shadow` on the
      SVG. That is a performance rule: a filter re-rasterises its whole element
      whenever any child changes, and the window now animates ten layers. */
@@ -255,6 +317,21 @@ h3 {
   padding: clamp(1rem, 2vw, 1.75rem) 0;
   overflow: hidden;
   min-height: 32rem;
+}
+
+/* The vertical came's highlight, drawn above the glazing rather than under it.
+   `right: 0` on an absolutely positioned box resolves against the padding box,
+   so this lands on exactly the pixel `inset -1px 0 0` wanted — it just paints in
+   the positioned layer instead of behind the SVG. Clipped by the bay's own
+   `overflow: hidden`, like everything else in here. */
+.window-bay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 1px;
+  background: var(--came-lit);
 }
 
 /* `.leaded` is a window plus a caption and both size from content, so without a
@@ -356,6 +433,7 @@ h3 {
   margin: 0;
   padding-top: clamp(1.1rem, 2vw, 1.5rem);
   border-top: var(--lead-w) solid var(--lead);
+  box-shadow: var(--came-top);
   display: flex;
   align-items: center;
   gap: 1rem 1.5rem;
@@ -365,13 +443,28 @@ h3 {
 /* The site has exactly one button shape, and this is it — the hero's way into
    the journal and the signup submit are the same object. Two copies of it drifted
    apart the moment the second one was written. */
+/* **No `flex: none`, and its absence is the fix for the one overflow this page
+   had.** It pinned the button at its max-content width, so under Chrome's
+   "Very Large" text setting — 24px root, exactly 150% — a 320px phone got 55px
+   of horizontal scroll, 116px at 175% and 177px at 200%, with the page's only
+   call to action as the thing pushing it off-screen. That is text-only scaling:
+   the viewport does not grow with the type the way it does under page zoom, so
+   nothing else on the page absorbs it. WCAG 1.4.4.
+   The default `0 1 auto` lets the label wrap instead, and **wrapping is what
+   happens, not shrinking**: a flex line breaks before it shrinks, so in both
+   `.follow` and the signup `.field` the plaque reaches a line of its own while
+   it still fits, and `min-width: auto` stops it going under its longest word.
+   Nothing moves at 100% — the button already fitted, and a line that does not
+   overflow is never shrunk. */
 .plaque {
   position: relative;
-  flex: none;
   padding: 0.85rem 1.4rem;
   border: var(--lead-w) solid var(--lead);
+  box-shadow: var(--came-rule);
   background: var(--lead-soft);
   color: var(--bone);
+  /* only visible once the label wraps, which is the zoom case above */
+  text-align: center;
   font-family: var(--font-mono);
   font-size: 0.85rem;
   letter-spacing: 0.1em;
@@ -447,6 +540,10 @@ h3 {
    in a single screenshot. One class, not one each. */
 .band {
   border-top: var(--lead-w) solid var(--lead);
+  /* The journal band is the one whose highlight `.window-bay` continues, the
+     hero being what sits above it — same note as `.masthead`: if the order of
+     the sections changes, check that rule. */
+  box-shadow: var(--came-top);
   padding: clamp(2.5rem, 6vw, 5rem) calc(var(--gutter) + var(--slack)) clamp(3.5rem, 8vw, 6rem);
 }
 
@@ -488,9 +585,7 @@ h3 {
   flex: 1;
   height: var(--lead-w);
   background: var(--lead);
-  box-shadow:
-    0 -1px 0 color-mix(in srgb, var(--bone) 7%, transparent),
-    0 1px 0 rgba(0, 0, 0, 0.6);
+  box-shadow: var(--came-rule);
 }
 
 .band-head h2 {
@@ -503,10 +598,21 @@ h3 {
    styles live in JournalCard.astro, which is the half of this pair that moves. */
 .panes {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  /* **`min(18rem, 100%)`, not a bare `18rem`.** An `auto-fit` track's minimum is
+     a floor the grid will overflow rather than break: 18rem is 576px at a 32px
+     root, so at Chrome's 200% text setting one pane held a 240px band open and
+     pushed the whole document 299px sideways. Wrapping the minimum in `min()`
+     lets a single column give way to the container while every wider case is
+     unchanged. The empty state hides this — the grid is not rendered at zero
+     entries, so it takes a fixture to see it (same as `7rem` in FollowBand). */
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
   gap: var(--lead-w);
   background: var(--lead);
   border: var(--lead-w) solid var(--lead);
+  /* the gaps *inside* need no help — they separate lit cells. The grid's own
+     outer edge is the one that meets flat ground, so it takes the pair like
+     `.strip-rail` on an entry does. */
+  box-shadow: var(--came-rule);
 }
 
 /* the empty glazing sits outside the grid, so auto-fit always stretches the
@@ -528,6 +634,16 @@ h3 {
   padding: 1.6rem max(1rem, calc((100% - 56ch) / 2));
   text-align: center;
   text-wrap: pretty;
+  /* With `border-top: 0` this strip is butted against `.panes`, so the joint's
+     came belongs to the grid and its light has to be drawn from this side: an
+     outer highlight would land *on* that came rather than above it, and
+     `.panes`' own outer shadow is painted under this strip's opaque background
+     — measured at **0 pixels** with a two-entry fixture, a declaration claiming
+     a line it never drew. The shadow moves inside instead, one pixel lower and
+     visually identical. The vacant case has its own top came; see below. */
+  box-shadow:
+    inset 0 1px 0 var(--came-dark),
+    0 1px 0 var(--came-dark);
 }
 
 /* `border-top: 0` above is a butt joint against `.panes` — and at zero entries
@@ -535,6 +651,7 @@ h3 {
    box on exactly the state that ships today. It gets its own came back. */
 .band-vacant .vacant-band {
   border-top: var(--lead-w) solid var(--lead);
+  box-shadow: var(--came-rule);
 }
 
 /* the one link in the strip: at zero entries this is the whole point of the
@@ -556,6 +673,7 @@ h3 {
    texture, not a way to read. Sentence case at a readable size instead. */
 .crypt {
   border-top: var(--lead-w) solid var(--lead);
+  box-shadow: var(--came-top);
   padding: clamp(1.75rem, 4vw, 2.75rem) calc(var(--gutter) + var(--slack));
   /* on the axis, like everything else below the hero */
   text-align: center;
@@ -586,6 +704,10 @@ h3 {
   .window-bay {
     border-right: 0;
     border-bottom: var(--lead-w) solid var(--lead);
+    /* The came turns with the layout, and so does its light. Both halves are
+       safe here: the inset lands in the bay's own bottom padding, and what sits
+       under the outer half is `.reading-body`, which paints no background. */
+    box-shadow: var(--came-bottom);
     /* inline 0, same reason as the desktop rule above */
     padding: 1.5rem 0 2rem;
     /* the 32rem floor is a desktop number: here it strands the window in
@@ -607,6 +729,11 @@ h3 {
      `.chancel` and can be ordered around the window. The pitch was starting at
      y=767 on a 390px screen — a whole swipe of navigation and art before the
      page said what it was. */
+  /* nothing above the bay is a came at this breakpoint */
+  .window-bay::after {
+    content: none;
+  }
+
   .reading {
     display: contents;
   }

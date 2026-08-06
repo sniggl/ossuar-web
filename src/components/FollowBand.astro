@@ -109,10 +109,6 @@ const all = [...channels, { ...feed, href: url(feed.href) }];
     gap: 0.9rem clamp(1.75rem, 4vw, 3.5rem);
   }
 
-  .channels li {
-    grid-template-columns: 7rem minmax(0, max-content);
-  }
-
   /* The closing row: full width and centred, on the same axis as the band
      heading above it and the journal's own closing sentence. Four channels
      divide evenly into two columns and a fifth item does not — left in the
@@ -126,6 +122,10 @@ const all = [...channels, { ...feed, href: url(feed.href) }];
   .channels li.closed {
     grid-column: 1 / -1;
     display: flex;
+    /* wrap, or this row is the widest unbreakable thing in the band: a nowrap
+       flex line's min-content is the sum of its items', so at a 32px root the
+       slug and its note held the whole list at 268px inside a 240px band */
+    flex-wrap: wrap;
     justify-content: center;
     gap: 1rem;
     padding-top: 0.35rem;
@@ -137,10 +137,21 @@ const all = [...channels, { ...feed, href: url(feed.href) }];
   }
 
   /* The column is the grid's job, not the link's: give the anchor a min-width
-     and its underline runs 7rem wide under a three-letter word. */
+     and its underline runs 7rem wide under a three-letter word.
+     **`minmax(0, 7rem)`, not a bare `7rem`, and that is a text-zoom fix.** The
+     track is in `rem`, so it scales with the reader's font-size setting while
+     the viewport does not — at Chrome's 200% setting `7rem` is 224px of label
+     column plus a 32px gap inside a 240px band, and the list pushed the whole
+     document sideways. A `minmax(0, …)` track keeps 7rem as the width it wants
+     and lets it give way when the row cannot have it, which is a no-op at every
+     size where it fits. This is the same shape as the `minmax(0, 1fr)` on
+     `.card` in og-card: a bare track keeps a minimum nobody asked for.
+     This rule was also declared twice — an earlier copy set the same columns
+     with `minmax(0, max-content)` on the note and lost to this one on source
+     order, so the comment below described a declaration that never applied. */
   .channels li {
     display: grid;
-    grid-template-columns: 7rem minmax(0, 1fr);
+    grid-template-columns: minmax(0, 7rem) minmax(0, 1fr);
     align-items: baseline;
     gap: 0.4rem 1rem;
     padding-bottom: 0.9rem;
@@ -172,11 +183,31 @@ const all = [...channels, { ...feed, href: url(feed.href) }];
     }
 
     /* One file, still content-sized and still centred — a full-width column
-       here left the list trailing 263px of empty band at 768px. The `minmax(0,
-       max-content)` on the note is what lets that same column shrink and wrap
-       on a phone instead of overflowing. */
+       here left the list trailing 263px of empty band at 768px. What lets that
+       same column shrink and wrap on a phone rather than overflow is the pair
+       of `minmax(0, …)` tracks on the row above, not anything here. */
     .channels {
       grid-template-columns: auto;
+    }
+  }
+
+  /* **The label stops sharing the row with its note when the row cannot hold
+     both, and the trigger is `rem` on purpose.** `rem` inside a media query
+     resolves against the *default* font size — the thing Chrome's "Font size"
+     setting actually changes — so this one query tracks the reader's type size
+     as well as the viewport, which is what a `px` breakpoint cannot do.
+     19rem is 304px at the 16px default, below the 320px floor, so nothing about
+     the shipped phone layout moves; at Chrome's "Very Large" (24px) it is 456px
+     and at 200% (32px) it is 608px, which is every phone.
+     Why it was needed: the note's track was squeezed to 11.7px and **the text
+     overflowed the box rather than the box growing**, so every element's
+     `getBoundingClientRect` still measured inside the viewport while the
+     document scrolled 152px sideways. Bisect by hiding subtrees and read
+     `documentElement.scrollWidth`; element boxes will tell you the page is
+     fine. */
+  @media (max-width: 19rem) {
+    .channels li {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>

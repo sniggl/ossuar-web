@@ -55,6 +55,14 @@ import { paletteCss } from '../tokens';
         margin: 0;
         background: var(--ink);
         --lead-w: 3px;
+        /* The card never imports global.css — it is a fixed 1200×630 capture
+           surface, not a page (§9) — so it restates the came's light the same
+           way it already restates `--lead-w`. Without it the card's divider is
+           `--lead` on `--ink` at 1.02:1, which is the exact defect the live page
+           had: an invisible came on the one image every share of this site
+           shows. */
+        --came-lit: color-mix(in srgb, var(--bone) 7%, transparent);
+        --came-dark: rgba(0, 0, 0, 0.6);
       }
 
       /* the box itself is set inline, from src/og.ts — the same numbers
@@ -76,7 +84,13 @@ import { paletteCss } from '../tokens';
         overflow: hidden;
         /* the lead came between bay and reading column — the same divider the
            live chancel draws, at the same weight */
+        position: relative;
         border-right: var(--lead-w) solid var(--lead);
+        /* outer half only — the inset highlight belongs on `.bay::after`, for
+           the same reason as the live page: the window is sized from `height`
+           and `aspect-ratio`, so it is wider than this bay and covers the inner
+           edge. Measured on the card: the inset painted 196 of 630 rows. */
+        box-shadow: 1px 0 0 var(--came-dark);
         background:
           radial-gradient(
             90% 62% at 50% 46%,
@@ -85,6 +99,17 @@ import { paletteCss } from '../tokens';
             var(--ink) 100%
           ),
           var(--ink);
+      }
+
+      /* the highlight, painted above the window rather than behind it */
+      .bay::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 1px;
+        background: var(--came-lit);
       }
 
       /* Explicit, because the card is a fixed 1200×630 and nothing here should

@@ -58,6 +58,9 @@ import { newsletter } from '../links';
     min-width: 0;
     padding: 0.85rem 1rem;
     border: var(--lead-w) solid var(--lead);
+    /* the same slab the plaque beside it is: `--lead-soft` behind `--lead`, and
+       the came's own pair so the border is a line rather than a declaration */
+    box-shadow: var(--came-rule);
     background: var(--lead-soft);
     color: var(--bone);
     font-family: var(--font-mono);
