@@ -215,6 +215,22 @@ h3 {
   .chancel {
     grid-template-columns: minmax(0, 1fr) minmax(0, calc(var(--page) / 2.05));
   }
+
+  /* The nav is the hero's column. Its right edge already landed on the page's
+     right margin like every band does; its *left* edge was wherever six labels
+     happened to end up under `space-between`, which put a third vertical 58px
+     off the pitch's — near enough to read as a miss rather than a rhythm, and
+     it moved whenever a label changed.
+     The width is the reading column's content box: the track (`--page / 2.05`)
+     less its two gutters. Above the cap that track is frozen, so this is the
+     constant 590px and the nav cannot wrap inside it — the six labels measure
+     352px and five gaps of 36px, 532px in all. Below the cap the track shrinks
+     faster than the labels do and the nav *would* wrap, which is the whole
+     reason this is scoped to the same breakpoint that freezes the track. */
+  .masthead nav {
+    width: calc(var(--page) / 2.05 - 2 * var(--gutter));
+    justify-content: space-between;
+  }
 }
 
 .window-bay {
@@ -311,9 +327,26 @@ h3 {
   color: var(--glass-amber-lit);
 }
 
+/* **The measure is the column, and that is the point.** At 46ch this paragraph
+   set 510px inside a 590px column: 56px of air on its left (the gutter) and
+   144px on its right. The *box* was symmetric and the *ink* was not, which is
+   what read as the hero text being shoved against the window — the box is not
+   what anyone sees.
+   53ch is the column, not a taste number: it lands the longest line 10px off
+   the rule below it, which is the ragged right of any left-aligned paragraph.
+   The cost is real and is recorded: 71 real characters against the ~62 this
+   site aims for elsewhere. It is inside the 45–75 band, and it is the price of
+   the ink and the rule stating the same edge. Narrowing the column instead was
+   measured and rejected — it takes the block off the gutter line and shrinks
+   the nav column with it until the nav wraps.
+   No `text-wrap: pretty` here, and that is a measurement rather than an
+   oversight: Chrome supports it, and toggling it changes not one line break in
+   either paragraph at 1890, 1440 or 1280. Its orphan rule looks for a single
+   word left alone, and the short last line here is "gift shop." — two words,
+   so it never fires. A declaration that does nothing is a claim that it does. */
 .standfirst {
   color: var(--bone-body);
-  max-width: 46ch;
+  max-width: 53ch;
   margin: 0;
 }
 
