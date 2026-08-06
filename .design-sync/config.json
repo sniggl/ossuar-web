@@ -1,0 +1,8 @@
+{
+  "pkg": "ossuar-web",
+  "globalName": "Ossuar",
+  "shape": "package",
+  "projectId": "e20c2583-cbef-4675-9ded-c0b8400dee48",
+  "cssEntry": ".design-sync/.cache/ossuar.css",
+  "readmeHeader": ".design-sync/conventions.md"
+}
