@@ -98,17 +98,37 @@ const all = [...channels, { ...feed, href: url(feed.href) }];
     padding: 0;
     list-style: none;
     display: grid;
-    /* Four channels as a 2×2 block that reaches the right gutter, rather than
-       single file down the left third of a full-bleed band. Halving the row
-       width is also what keeps each label next to its own note: spread across
-       the full 1344px they stop reading as a pair. */
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Two content-sized columns, centred as a block on the page axis.
+       Equal `1fr` columns were measured leaning 280px left: each cell is a
+       label plus a short note, so a wide cell leaves ~300px of trailing space,
+       and the left column hides its trailing space in the gap while the right
+       column puts its own against the page edge. Sizing the columns to their
+       content and centring the block puts the same air on both sides. */
+    grid-template-columns: repeat(2, auto);
+    justify-content: center;
     gap: 0.9rem clamp(1.75rem, 4vw, 3.5rem);
   }
 
-  /* the closing row: full width, because it is the one item that is not a link */
-  .closed {
+  .channels li {
+    grid-template-columns: 7rem minmax(0, max-content);
+  }
+
+  /* The closing row: full width and centred, on the same axis as the band
+     heading above it and the journal's own closing sentence. Four channels
+     divide evenly into two columns and a fifth item does not — left in the
+     grid it put three rows against two and hung the band's whole bottom-right
+     corner empty, which is the asymmetry that read as the page leaning. */
+  /* `.channels li.closed`, not `.closed`. Astro stamps every compound, so
+     `.channels[cid] li[cid]` is (0,3,1) and a bare `.closed[cid]` is (0,2,0) —
+     it loses, and `display: flex` silently never applied. Measured at 849px of
+     left skew against a built page while the source looked correct. This is the
+     specificity trap this codebase has now hit three times. */
+  .channels li.closed {
     grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding-top: 0.35rem;
   }
 
   /* back to one file when the form has taken the other column */
@@ -147,9 +167,16 @@ const all = [...channels, { ...feed, href: url(feed.href) }];
   }
 
   @media (max-width: 60rem) {
-    .band-body.has-form,
-    .channels {
+    .band-body.has-form {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* One file, still content-sized and still centred — a full-width column
+       here left the list trailing 263px of empty band at 768px. The `minmax(0,
+       max-content)` on the note is what lets that same column shrink and wrap
+       on a phone instead of overflowing. */
+    .channels {
+      grid-template-columns: auto;
     }
   }
 </style>

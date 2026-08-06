@@ -416,19 +416,23 @@ h3 {
   margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-/* The came that carries the heading to the right gutter. Every band below the
-   hero was a heading marooned at the far left of a full-bleed section with two
-   thirds of the width empty beside it — the masthead spans (wordmark against
-   nav) and the hero spans (window against text), and then the page stopped
-   spanning, which is what read as everything leaning left below the fold.
-   It is a rule rather than anything with content in it because there is nothing
-   true to put there: a band that says "4 channels" or "0 posts" is a number
-   typed to fill space. Lead is what this site is made of, so the structure
-   reaches the edge and the ink does not have to.
-   `flex: 1` with a zero basis is why it never forces a wrap: it takes what is
-   left after the heading and shrinks to nothing rather than pushing itself onto
-   a second line. Baseline alignment gives a flex item with no text its bottom
-   margin edge as its baseline, which lands the came exactly on the heading's. */
+/* A came on each side, so the heading sits on the page's centre axis.
+   **This is the fix for the lean, and it took four passes to find because the
+   first three treated it as a box problem.** Capping and centring the page made
+   the margins equal and the page still read as leaning, because everything
+   inside it was still a left-aligned stack: heading hard left, list hard left,
+   colophon hard left — under a hero window that is perfectly symmetrical about
+   its centre light. A page whose thesis is a cathedral cannot run its nave down
+   the left-hand wall.
+   The rules are what let the heading centre without inventing anything to
+   balance it against: there is nothing true to put on the right of a band — "4
+   channels" or "0 posts" is a hand-typed number, which this site does not do —
+   so lead takes the width and the type takes the axis.
+   `flex: 1` with a zero basis is why they never force a wrap: they split what
+   is left after the heading and shrink to nothing rather than pushing onto a
+   second line. Baseline alignment gives a flex item with no text its bottom
+   margin edge as its baseline, which lands each came exactly on the heading's. */
+.band-head::before,
 .band-head::after {
   content: '';
   flex: 1;
@@ -503,6 +507,8 @@ h3 {
 .crypt {
   border-top: var(--lead-w) solid var(--lead);
   padding: clamp(1.75rem, 4vw, 2.75rem) calc(var(--gutter) + var(--slack));
+  /* on the axis, like everything else below the hero */
+  text-align: center;
   font-family: var(--font-mono);
   font-size: 0.9rem;
   line-height: 1.6;
